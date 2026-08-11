@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>即兴之书 · 灵感魔法书</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #2c2416;
+      font-family: 'Noto Serif SC', 'Times New Roman', serif;
+      color: #3b2f2f;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    #app {
+      max-width: 480px; width: 100%;
+      background: #faf3e8;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      box-shadow: 0 0 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(139,90,43,0.1);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      margin: 0 auto;
+      border-left: 1px solid #d4b896; border-right: 1px solid #d4b896;
+    }
+    .header {
+      text-align: center; padding: 1.5rem 1rem 0.5rem;
+      border-bottom: 2px dashed #8b5a2b;
+    }
+    .header h1 {
+      font-size: 2rem; color: #8b5a2b; letter-spacing: 2px;
+      text-shadow: 1px 1px 0 rgba(255,255,200,0.6); cursor: pointer;
+    }
+    .subtitle { font-size: 0.9rem; color: #7a6a5c; font-style: italic; margin-top: 0.2rem; }
+    .page-content { flex: 1; padding: 1.2rem; overflow-y: auto; }
+    .bottom-nav {
+      display: flex; justify-content: space-around;
+      background: #f5eadb; border-top: 2px solid #8b5a2b;
+      padding: 0.5rem 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .nav-item {
+      text-decoration: none; color: #3b2f2f; font-size: 0.9rem;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0.7; transition: 0.2s; cursor: pointer;
+    }
+    .nav-item.active { opacity: 1; color: #8b5a2b; font-weight: bold; transform: translateY(-2px); }
+    .card {
+      background: rgba(255,252,245,0.9); border: 1px solid #d4b896;
+      padding: 1rem; margin-bottom: 0.8rem; border-radius: 4px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1); backdrop-filter: blur(2px);
+    }
+    .filters { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .filters button {
+      background: transparent; border: 1px solid #8b5a2b;
+      padding: 0.4rem 0.8rem; border-radius: 20px;
+      font-family: inherit; color: #3b2f2f; cursor: pointer;
+    }
+    .filters button.active { background: #8b5a2b; color: white; }
+    .tag {
+      font-size: 0.7rem; background: #d4b896; color: white;
+      padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem;
+    }
+    .detail { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed #ccc; font-size: 0.9rem; }
+    .detail button {
+      margin-top: 0.5rem; background: #8b5a2b; color: white; border: none;
+      padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer;
+    }
+    .book-cover {
+      background: #e8d5b5; margin: 2rem auto; padding: 3rem 2rem;
+      border-radius: 8px; box-shadow: inset 0 0 30px rgba(0,0,0,0.2), 5px 5px 15px rgba(0,0,0,0.3);
+      cursor: pointer; border: 2px solid #8b5a2b;
+    }
+    .quote-text { font-size: 1.6rem; font-style: italic; white-space: pre-line; }
+    .quote-hint { font-size: 0.8rem; color: #7a6a5c; margin-top: 1.5rem; }
+    .dim-row { display: flex; align-items: center; margin-bottom: 0.8rem; }
+    .dim-label { width: 5em; font-weight: bold; }
+    .dim-value { flex: 1; background: #fff; padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid #ccc; }
+    .dim-row button { margin-left: 0.5rem; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; }
+    .draw-all { display: block; width: 100%; margin: 1rem 0; background: #8b5a2b; color: white; border: none; padding: 0.7rem; border-radius: 4px; font-family: inherit; cursor: pointer; }
+    .result-scene { background: #f5eadb; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem; font-style: italic; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1 @click="currentPage='home'">📖 即兴之书</h1>
+    <div class="subtitle">一本属于即兴者的魔法书</div>
+  </div>
+
+  <div class="page-content">
+    <!-- 首页 -->
+    <div v-if="currentPage==='home'">
+      <div style="text-align:center; padding-top:2rem;">
+        <div style="font-size:1.8rem; font-style:italic; color:#8b5a2b; margin:2rem 0;">
+          “是的，而且……”<br><span style="font-size:0.9rem; color:#7a6a5c;">— 即兴第一定律</span>
+        </div>
+        <p>翻开这本魔法书，寻找你的即兴宝藏。</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem;">
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='programs'">🎭 节目库</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='games'">🎲 热身游戏</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='book'">📘 即兴之书</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='generator'">✨ 灵感生成</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 节目库（占位） -->
+    <div v-if="currentPage==='programs'">
+      <h2>🎭 即兴节目库</h2>
+      <div class="filters">
+        <button :class="{active:progFilter==='all'}" @click="progFilter='all'">全部</button>
+        <button :class="{active:progFilter==='情绪'}" @click="progFilter='情绪'">情绪类</button>
+        <button :class="{active:progFilter==='趋势'}" @click="progFilter='趋势'">趋势·复合类</button>
+      </div>
+      <div v-for="p in filteredPrograms" :key="p.id" class="card" @click="toggleProg(p.id)">
+        <strong>{{p.name}} <span class="tag">{{p.type}}</span></strong>
+        <p style="margin-top:0.3rem;">{{p.brief}}</p>
+        <div v-if="expandedProg===p.id" class="detail">
+          <p><strong>👥 人数：</strong>{{p.players}}</p>
+          <p><strong>⏱️ 时长：</strong>{{p.duration}}</p>
+          <p><strong>📜 规则：</strong>{{p.rules}}</p>
+          <p><strong>🎤 主持话术：</strong>{{p.hostLines}}</p>
+          <p><strong>😂 笑点设计：</strong>{{p.laughPoints}}</p>
+          <button @click.stop="copyText(p.hostLines)">复制话术</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 热场游戏（占位） -->
+    <div v-if="currentPage==='games'">
+      <h2>🎲 热场游戏</h2>
+      <div class="filters">
+        <button :class="{active:gameFilter==='all'}" @click="gameFilter='all'">全部</button>
+        <button :class="{active:gameFilter==='情绪'}" @click="gameFilter='情绪'">情绪</button>
+        <button :class="{active:gameFilter==='肢体'}" @click="gameFilter='肢体'">肢体</button>
+        <button :class="{active:gameFilter==='专注'}" @click="gameFilter='专注'">专注</button>
+      </div>
+      <div v-for="g in filteredGames" :key="g.id" class="card">
+        <strong>{{g.name}} <span class="tag">{{g.category}}</span></strong>
+        <p style="margin-top:0.3rem;">{{g.description}}</p>
+        <p style="font-size:0.8rem; color:#7a6a5c; margin-top:0.3rem;">👥 {{g.players}} · ⏱️ {{g.duration}}</p>
+      </div>
+    </div>
+
+    <!-- 即兴之书（已严谨拆分为独立条目，并精炼符号） -->
+    <div v-if="currentPage==='book'" style="text-align:center;">
+      <h2>📘 即兴之书</h2>
+      <p style="color:#7a6a5c;">当你迷茫时，翻开这一页</p>
+      <div class="book-cover" @click="randomQuote">
+        <div class="quote-text">{{currentQuote.text}}</div>
+        <div class="quote-hint">轻触书页，获取指引</div>
+      </div>
+      <p style="color:#7a6a5c;">已有 {{quotes.length}} 句箴言</p>
+    </div>
+
+    <!-- 灵感生成器 -->
+    <div v-if="currentPage==='generator'">
+      <h2>✨ 灵感拉霸</h2>
+      <div style="background:#faf3e8; padding:1rem; border-radius:8px; border:1px solid #d4b896;">
+        <div v-for="dim in dims" :key="dim.key" class="dim-row">
+          <span class="dim-label">{{dim.label}}</span>
+          <span class="dim-value">{{drawn[dim.key] || '---'}}</span>
+          <button @click="drawOne(dim.key)">🎲</button>
+        </div>
+        <button class="draw-all" @click="drawAll">组合生成灵感场景</button>
+        <div class="result-scene" v-if="showScene">{{sceneText}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" :class="{active:currentPage==='programs'}" @click="currentPage='programs'">🎭 节目</div>
+    <div class="nav-item" :class="{active:currentPage==='games'}" @click="currentPage='games'">🎲 热场</div>
+    <div class="nav-item" :class="{active:currentPage==='book'}" @click="currentPage='book'">📘 即兴之书</div>
+    <div class="nav-item" :class="{active:currentPage==='generator'}" @click="currentPage='generator'">✨ 灵感</div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, computed } = Vue;
+
+  createApp({
+    setup() {
+      const currentPage = ref('home');
+
+      // ------ 节目数据（待填充）------
+      const programs = [
+        { id: 1, name: '情绪过山车', type: '情绪', brief: '根据观众给出的情绪级别，演员需瞬间切换并合理化情绪。', players: '3-5人', duration: '5-8分钟', rules: '一位演员开始一个中性场景，主持人随机喊出1-10的情绪强度，演员必须立刻以该强度继续表演。', hostLines: '“接下来，我需要一个地点和一个关系……好，开始！……情绪强度，8！”', laughPoints: '演员在极端情绪中维持场景逻辑的荒诞反差。' },
+        { id: 2, name: '专家访谈', type: '趋势', brief: '一位即兴专家根据观众给出的荒谬专长接受访谈。', players: '2人', duration: '6-10分钟', rules: '主持人扮演访谈者，专家需合理化一切荒唐问题。', hostLines: '“欢迎我们的专家，他是世界知名的……呃……用脚剪头发的艺术家！”', laughPoints: '专家一本正经的解释与离谱主题的碰撞。' }
+      ];
+      const progFilter = ref('all');
+      const expandedProg = ref(null);
+      const filteredPrograms = computed(() => {
+        if (progFilter.value === 'all') return programs;
+        return programs.filter(p => p.type === progFilter.value);
+      });
+      function toggleProg(id) { expandedProg.value = expandedProg.value === id ? null : id; }
+
+      // ------ 热身游戏数据（待填充）------
+      const games = [
+        { id: 1, name: 'Zip Zap Zop', category: '专注', players: '6-20人', duration: '3分钟', description: '传递能量球，说错或迟疑的人淘汰或做即兴惩罚。' },
+        { id: 2, name: '情感雕塑', category: '情绪', players: '4-10人', duration: '5分钟', description: '一人摆出雕塑姿势，其他人根据姿势赋予一种强烈情绪并说出内心独白。' }
+      ];
+      const gameFilter = ref('all');
+      const filteredGames = computed(() => {
+        if (gameFilter.value === 'all') return games;
+        return games.filter(g => g.category === gameFilter.value);
+      });
+
+      // ------ 即兴之书（严谨拆分版，真听真看真感受已独立）------
+      const quotes = [
+        { text: `“I don't know what I'm doing,but it's ok.”——Sean Croft\n“我不知道我在干什么，但这是OK的。”——小丑哲学` },
+        { text: `“When no words have been spoken, one is in a state of modesty which allows words to be born out of silence.”\n“当没有语言被说出时，你处在一种谦逊状态，这种状态让语言可以从沉默中诞生。”\n—— 贾克·乐寇` },
+        { text: `你从一个批评家变成一个建设者的过程，你一定会理解什么叫完成比完美更重要。\n——《李诞脱口秀工作手册》` },
+        { text: `即兴的底气，是相信同伴，更是敢做自己的勇敢。` },
+        { text: `住嘴。讲完话以后，留几秒沉默的时间。这个时间是搭档用来消化你的话的。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `舞台上，无实物是假的，剧情是假的，关系是假的，但记住只有你的搭档是真的，一定要重视你的搭档。\n——阿球` },
+        { text: `只有不断的练习，你才能渐渐在舞台上展示出真实的自己。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `优秀的即兴演员会习惯性地接纳每一条别人给他的提议。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `随机应变这项技能的基础是共情。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `做一个像水一样具有流动性的人。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `表演者的成长犹如树木一样，以优质的养分为基础，持续不断的生长。所以演员要有清晰的观察力和丰富的表演技术为基础，并且要努力成长为自由而富有创意的演员。\n——Yoo JinWoo（刘真雨）` },
+        { text: `人们生活中大部分不好的事情都是由于无意识而引起的。它们是小我创造的，有时我称它们为「戏剧性事件」。当你完全处于意识状态，戏剧性事件就不会再进入你的生活。\n——《当下的力量（白金版）》` },
+        { text: `当你完全接受当下的事实，你生活中的所有戏剧性事件就会终结。\n——《当下的力量（白金版）》` },
+        { text: `如果一个人有意识的改变自身的姿态，那么ta的自尊并不会因此受损。\n——《成长预演》` },
+        { text: `人为了谋生，展现和转换姿态就像呼吸一样自然而不可避免。\n——《成长预演》` },
+        { text: `人们经常试图通过扮演与自身所经历的姿态相反的角色，来隐藏自己的真实姿态。\n——《成长预演》` },
+        { text: `实际上，姿态交易始终在不断地发生。在公园里，我们会注意到鸭子的争吵，却不会注意到它们在没有争吵时，是如何小心翼翼地保持距离的。\n——Johnstone` },
+        { text: `人际互动在姿态上从来都不是中立的，我们都在不断地根据周围的环境和他人来调整自己的姿态。\n——《成长预演》` },
+        { text: `当「扮演怪物」与其他治疗工具结合使用时，它不仅有助于提升对他人差异性的容忍度，也有助于重新整合那些被排斥的自我部分。\n——schwartz` },
+        { text: `观众的关注就像一笔贷款，讲故事者需要通过遵守这些叙事规则来偿还。\n——《成长预演》` },
+        { text: `任何惯例，无论多么不同寻常，只有在被中断或打破时，才能产生叙事价值，因为打破惯例本身就能产生故事情节。完成的惯例可以成为故事的铺垫（“平台”）。\n——《成长预演》` },
+        { text: `通过共同（经历）虚构的危险，来创造真正互相支持的关系体验。\n——《成长预演》` },
+        { text: `正如良好的即兴创作原则与良好的关系功能之间存在对应关系一样，一个引人入胜并令人愉悦的故事，往往与那些以有意义并健康的方式，来定义我们现实的故事相呼应。\n——《成长预演》` },
+        { text: `在布鲁纳（Bruner）的范式思维中（参见第2章），一个理论的优越性在于它的优雅、预测力以及与其他已知事实的广泛兼容性；而在叙事模式中，当一个故事结构更连贯、信息普遍性更强、表演艺术性更高时，故事通常也更具洞见力。\n——《成长预演》` },
+        { text: `游戏的目标在于“胜负“和“擅长（不擅长）”，而非“寓教于乐”和“享受乐趣”时，乐趣便丧失了。\n——《成长预演》` },
+        { text: `在现实生活中，人们常常因为想显得强大而拒绝支持他人，但即兴训练则向我们展现了如何通过关注和支持他人，甚至令他人看起来不错，而获得乐趣并充满力量。\n——《成长预演》` },
+        { text: `在成长预演的玩乐世界中，通过一系列的游戏和练习，参与者体验到如何让对方感到强大和自信。\n——《成长预演》` },
+        { text: `频繁的权力转换建立了人与人之间的信任和融洽关系：我相信我现在可以公平地授权于你，因为我知道你很快会把权力还回来。\n——《成长预演》` },
+        { text: `只要没死，你并非如想象中的那般无能；你仅仅是被冻住了。\n——《即兴》` },
+        { text: `如果英雄被怪物吞下去了，他就会变成一坨英勇的排泄物，坚定地开始新的冒险。\n——《即兴》` },
+        { text: `事实上，坚持认为某一朵花是整个花园里最漂亮的一朵，这本身就很疯狂。\n——《即兴》` },
+        { text: `我开始认为，孩子不是未成熟的大人，而大人是退化了的孩子。\n——《即兴》` },
+        { text: `随着长大，一切都变得黯淡无趣。我仍记得小时候生活过的这个世界是多么新奇，但是我曾以为知觉的迟钝是长大的必然结果——就像眼睛的晶状体逐渐模糊一样。彼时的我并不明白，清晰其实一直留存心间。\n——《即兴》` },
+        { text: `我所做的就是专注于陌生人之间的关系，专注于使两个人想象力的结合能够相加而不是相减的方法。\n——《即兴》` },
+        { text: `我教的是自发性，因此我告诉他们，不必试图控制未来，或者想“赢”；清空大脑，只需看着。当轮到他们参加的时候，做该做的就行，然后瞧瞧会发生什么。正是这种不执着、不控制未来的决定，让学生产生了自发性。\n——《即兴》` },
+        { text: `每一个变化和动作都意味着一种姿态，任何行动都不是偶然的，也不是真的“没有动机”。\n——《即兴》` },
+        { text: `观众很享受姿态与社会地位的反差。\n——《即兴》` },
+        { text: `演员或即兴演员必须接受自己的缺点，允许自己受到侮辱，否则他永远不会真正感到“安全”。\n——《即兴》` },
+        { text: `如果你不知道在场景中该做什么，只需要说出类似的话：“天哪！那是什么？”\n——《即兴》` },
+        { text: `之所以难受是因为我们在不停的结构和重建。\n——《即兴》` },
+        { text: `即兴演员必须明白，他的首要技能就是释放搭档的想象力。\n——《即兴》` },
+        { text: `我不想让他们去“思考”成为另一种生物，我想让他们“体验”成为另一种生物。\n——《即兴》` },
+        { text: `聆听和观察，这正是即兴最重要的两个规则之一。\n——《即兴戏剧》` },
+        { text: `唯一能让你失败的方法就是不去尝试。\n——《即兴戏剧》` },
+        { text: `人人都是天才，一切都是礼物。\n——《即兴戏剧》` },
+        { text: `停止分析性的思考，让你的身体动作激发你。\n——《即兴戏剧》` },
+        { text: `先到先得，后面优于前面。\n——《即兴戏剧》` },
+        { text: `大写Yes And。\n——《即兴戏剧》` },
+        { text: `实事求是。用发展的眼光看问题。\n——《李诞脱口秀工作手册》` },
+        { text: `越早丧失看剧的乐趣，越早发现观察剧的乐趣，越早成为一个合格的以创作为生的人。\n——《李诞脱口秀工作手册》` },
+        { text: `别离开战场，别离开战友，别离开敌人。\n——《李诞脱口秀工作手册》` },
+        { text: `以赛代练，错得够多了，自然就会了。\n——《李诞脱口秀工作手册》` },
+        { text: `创作不能靠雷劈，创作要自己没事就劈自己。\n——《李诞脱口秀工作手册》` },
+        { text: `不可能的，我们永远不可能准备好。如果你的目标是变成一个越来越强的演员，那就请永远都好好准备。\n——《李诞脱口秀工作手册》` },
+        { text: `对镜练习，回看录像，心里默戏，都是必要的工作。\n——《李诞脱口秀工作手册》` },
+        { text: `真诚是第一位的。\n——《李诞脱口秀工作手册》` },
+        { text: `有意义的失败远远比无意义的成功有价值。\n——《李诞脱口秀工作手册》` },
+        { text: `不停上开放麦，不停演出的目的，是练自己，不是炸场。\n——《李诞脱口秀工作手册》` },
+        { text: `人生的目的就是成为更好的自己。\n——《李诞脱口秀工作手册》` },
+        { text: `一定还要引领，让预测落空。不停找到同步，做出一点点引领，打破，重建，再同步，再引领。\n——《李诞脱口秀工作手册》` },
+        { text: `在自己的节奏里，就放松了，就自然了。你自己的节奏感，就是你的风格。\n——《李诞脱口秀工作手册》` },
+        { text: `取法其上得其中。\n——《李诞脱口秀工作手册》` },
+        { text: `不要给人拒绝的机会，给选择。《李诞脱口秀工作手册》` },
+        { text: `我总是说，没事的，做不好还做不坏吗，失败了就失败了。\n——《李诞脱口秀工作手册》` },
+        { text: `问事实，别问想法。问行为，别问理由。问事，别问人。\n——《李诞脱口秀工作手册》` },
+        { text: `完成比完美更重要。\n——《李诞脱口秀工作手册》` },
+        { text: `你是你的目的。\n——《李诞脱口秀工作手册》` },
+        { text: `喜剧=普通人+不具备获胜条件+无法克服的困难+从不放弃。\n——《喜剧这回事》` },
+        { text: `真听、真看、真感受。` },
+        { text: `因为一个故事想要吸引观众，最重要的就是得让观众喜欢上那个即将与我们一起踏上旅途的人。` },
+        { text: `喜剧演员是观众的玩具。` },
+        { text: `人人都可以是喜剧之王。` },
+        { text: `让队友发光。` },
+        { text: `尊重自发。` },
+        { text: `即兴是：从无序中寻找有序。` },
+        { text: `笑起来很响，想起来好笑。` },
+        { text: `聊天是最小的即兴。` },
+        { text: `相信即兴之神！` },
+        { text: `享受失控。` },
+        { text: `和队友一起冒险。` },
+        { text: `勇敢者先享受世界。` },
+        { text: `达成共识。` },
+        { text: `活在当下。` },
+        { text: `上台最重要的事情，就是启发你的伙伴。` },
+        { text: `善意的好奇。` },
+        { text: `去表达，去尝试，去兴高采烈的失败！` },
+        { text: `让困难飞一会儿。` },
+        { text: `看见伙伴，理解伙伴，支持伙伴。` },
+        { text: `首先是快乐，其他都是其他。` },
+        { text: `ALL FOR FUN.\n为了好玩。` },
+        { text: `活着就是一直即兴！` },
+        { text: `紧握的拳头接不住礼物，伸出的手掌才能抓住未来。` },
+        { text: `悲剧给人力量，喜剧给人希望。` },
+        { text: `不知道做什么，就看着队友，说一句简单的感受。` },
+        { text: `做个决定！` },
+        { text: `当你迷失时，看着伙伴的眼睛，就能找到方向；如果他也迷失了，至少你们看着彼此，陪伴着彼此一起迷失。` },
+        { text: `即兴喜剧是唯一一个可以按照你喜欢的方式自由生长的，怎么生长都是对。` },
+        { text: `勇敢一点，你比自己想象的更好。` },
+        { text: `成全让“我”成为“我们”。` },
+        { text: `我们可以大胆的介入他人的生活。` },
+        { text: `伙伴有多厉害，是我们决定的。` },
+        { text: `错误是礼物！` },
+        { text: `你会玩一辈子即兴么？人生就是一场即兴啊！慢慢来，我们是可以玩一辈子即兴的。` },
+        { text: `多聆听、多观察、多体验、多积累。` },
+        { text: `先在路上，再相遇，再陪伴。` },
+        { text: `感受当下。` },
+        { text: `不评判。` },
+        { text: `放弃预设。` },
+        { text: `信念感！` },
+        { text: `干拔！` },
+        { text: `没有计划也很好。` },
+        { text: `知行合一。` },
+        { text: `即兴就是允许有人不即兴。` },
+        { text: `团魂！` }
+      ];
+
+      const currentQuote = ref(quotes[Math.floor(Math.random() * quotes.length)]);
+
+      function randomQuote() {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * quotes.length);
+        } while (quotes[newIndex].text === currentQuote.value.text && quotes.length > 1);
+        currentQuote.value = quotes[newIndex];
+      }
+
+      // ------ 灵感生成器 ------
+      const dims = [
+        { key: 'object', label: '东西', items: ['会说话的猫', '情书', '反重力雨伞', '魔法马桶刷', '发光袜子'] },
+        { key: 'relation', label: '关系', items: ['离婚夫妻', '暗恋师徒', '互看不顺眼的同事', '失散多年的兄妹', '外星人与地球翻译'] },
+        { key: 'job', label: '职业', items: ['海底捞拉面师', '入殓师', '元宇宙架构师', '宠物心理咨询师', '云朵造型师'] },
+        { key: 'place', label: '地点', items: ['末日地堡', '牙科诊所', '初恋的天台', '24小时便利店', '失控的电梯'] },
+        { key: 'verse', label: '诗句/台词', items: ['这是最好的时代，也是最坏的时代', '山重水复疑无路', 'To be or not to be', '今晚月色真美'] }
+      ];
+
+      const drawn = ref({});
+      const showScene = ref(false);
+
+      function drawOne(key) {
+        const dim = dims.find(d => d.key === key);
+        drawn.value[key] = dim.items[Math.floor(Math.random() * dim.items.length)];
+        showScene.value = false;
+      }
+
+      function drawAll() {
+        dims.forEach(dim => {
+          drawn.value[dim.key] = dim.items[Math.floor(Math.random() * dim.items.length)];
+        });
+        showScene.value = true;
+      }
+
+      const sceneText = computed(() => {
+        return `在「${drawn.value.place || '___'}」，一个「${drawn.value.job || '___'}」和「${drawn.value.relation || '___'}」，
+拿着「${drawn.value.object || '___'}」，说出“${drawn.value.verse || '___'}”。`;
+      });
+
+      function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => alert('话术已复制到剪贴板'));
+      }
+
+      return {
+        currentPage,
+        programs, progFilter, expandedProg, filteredPrograms, toggleProg,
+        games, gameFilter, filteredGames,
+        quotes, currentQuote, randomQuote,
+        dims, drawn, showScene, drawOne, drawAll, sceneText,
+        copyText
+      };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
