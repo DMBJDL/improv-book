@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>即兴之书 · 灵感魔法书</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #2c2416;
+      font-family: 'Noto Serif SC', 'Times New Roman', serif;
+      color: #3b2f2f;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    #app {
+      max-width: 480px; width: 100%;
+      background: #faf3e8;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      box-shadow: 0 0 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(139,90,43,0.1);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      margin: 0 auto;
+      border-left: 1px solid #d4b896; border-right: 1px solid #d4b896;
+    }
+    .header {
+      text-align: center; padding: 1.5rem 1rem 0.5rem;
+      border-bottom: 2px dashed #8b5a2b;
+    }
+    .header h1 {
+      font-size: 2rem; color: #8b5a2b; letter-spacing: 2px;
+      text-shadow: 1px 1px 0 rgba(255,255,200,0.6); cursor: pointer;
+    }
+    .subtitle { font-size: 0.9rem; color: #7a6a5c; font-style: italic; margin-top: 0.2rem; }
+    .page-content { flex: 1; padding: 1.2rem; overflow-y: auto; }
+    .bottom-nav {
+      display: flex; justify-content: space-around;
+      background: #f5eadb; border-top: 2px solid #8b5a2b;
+      padding: 0.5rem 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .nav-item {
+      text-decoration: none; color: #3b2f2f; font-size: 0.9rem;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0.7; transition: 0.2s; cursor: pointer;
+      padding: 0.2rem 0.5rem; border-radius: 4px;
+    }
+    .nav-item.active { opacity: 1; color: #8b5a2b; font-weight: bold; background: rgba(139,90,43,0.08); }
+    .card {
+      background: rgba(255,252,245,0.9); border: 1px solid #d4b896;
+      padding: 1rem; margin-bottom: 0.8rem; border-radius: 4px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1); backdrop-filter: blur(2px);
+    }
+    .filter-btn {
+      background: transparent; border: 1px solid #8b5a2b;
+      padding: 0.3rem 0.7rem; border-radius: 16px;
+      font-family: inherit; font-size: 0.85rem; color: #3b2f2f;
+      cursor: pointer; margin: 0.2rem; white-space: nowrap;
+      transition: 0.15s;
+    }
+    .filter-btn.active { background: #8b5a2b; color: white; }
+    .filter-row { display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 0.8rem; }
+    .filter-label { font-size: 0.85rem; color: #7a6a5c; margin-right: 0.5rem; min-width: 2.5rem; }
+    .program-card {
+      background: rgba(255,252,245,0.9); border: 1px solid #d4b896;
+      padding: 0.8rem 1rem; margin-bottom: 0.6rem; border-radius: 6px;
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+    .program-card h4 { font-size: 1rem; display: inline; }
+    .class-tag {
+      font-size: 0.7rem; background: #d4b896; color: white;
+      padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem;
+    }
+    .program-brief { font-size: 0.85rem; color: #5a4a3a; margin-top: 0.3rem; }
+    .program-detail { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed #ccc; font-size: 0.85rem; line-height: 1.6; }
+    .program-detail p { margin-bottom: 0.3rem; }
+    .detail-label { font-weight: bold; color: #8b5a2b; }
+    .book-page-container { text-align: center; padding-top: 0.5rem; }
+    .book-subtitle { font-size: 1rem; color: #7a6a5c; font-style: italic; margin-bottom: 1.8rem; }
+    .book-cover {
+      background: #e8d5b5; margin: 0 auto 1.2rem;
+      padding: 3rem 2rem; border-radius: 8px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.2), 5px 5px 15px rgba(0,0,0,0.3);
+      cursor: pointer; border: 2px solid #8b5a2b;
+      min-height: 200px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .book-cover:active { transform: scale(0.98); box-shadow: inset 0 0 40px rgba(0,0,0,0.25), 3px 3px 10px rgba(0,0,0,0.3); }
+    .book-cover-text {
+      font-size: 1.6rem; font-style: italic; white-space: pre-line;
+      color: #3b2f2f; font-weight: 700; line-height: 1.8;
+    }
+    .book-cover-hint { font-size: 0.85rem; color: #8b5a2b; font-style: italic; margin-top: 0.8rem; }
+    .book-counter { font-size: 0.85rem; color: #7a6a5c; margin-bottom: 2rem; }
+    .book-submit { margin-top: 1rem; font-size: 0.8rem; color: #b0a090; cursor: pointer; text-decoration: underline; }
+    .slot-container { text-align: center; padding-top: 0.5rem; }
+    .mode-toggle { text-align: center; margin-bottom: 0.8rem; }
+    .mode-toggle span {
+      background: #f5eadb; border: 1px solid #8b5a2b;
+      padding: 0.3rem 0.8rem; margin: 0 0.2rem; border-radius: 20px;
+      font-size: 0.85rem; cursor: pointer; color: #3b2f2f;
+    }
+    .mode-toggle span.active-mode { background: #8b5a2b; color: white; }
+    .difficulty-toggle { text-align: right; margin-bottom: 0.5rem; }
+    .difficulty-toggle span {
+      background: #f5eadb; border: 1px solid #8b5a2b;
+      padding: 0.3rem 0.8rem; border-radius: 20px;
+      font-size: 0.85rem; cursor: pointer; color: #3b2f2f;
+    }
+    .main-screen {
+      background: #fff; border: 2px solid #8b5a2b;
+      border-radius: 8px; padding: 2rem 1rem; margin-bottom: 1.5rem;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.1);
+      min-height: 120px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .main-result {
+      font-size: 2.2rem; font-weight: bold; color: #3b2f2f;
+      word-break: break-word; transition: transform 0.2s ease;
+      letter-spacing: 0.05em;
+    }
+    .sub-results { margin-top: 1rem; font-size: 0.9rem; color: #5a4a3a; line-height: 1.8; }
+    .line-list { margin-top: 0.3rem; font-size: 1.25rem; font-weight: 700; color: #2c2416; line-height: 2.2; text-align: center; }
+    .line-list div { padding: 0.2rem 0; }
+    .button-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-top: 0.5rem; }
+    .button-grid.two-col { grid-template-columns: 1fr 1fr; }
+    .slot-btn {
+      background: #f5eadb; border: 2px solid #8b5a2b;
+      padding: 0.8rem 0.3rem; border-radius: 6px;
+      font-family: inherit; font-size: 1rem; font-weight: bold;
+      color: #3b2f2f; cursor: pointer;
+      transition: all 0.15s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      user-select: none;
+    }
+    .slot-btn:active { transform: scale(0.96); background: #e8d5b5; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .slot-btn.active-btn { background: #8b5a2b; color: white; border-color: #8b5a2b; }
+    .consonant-count { margin-top: 0.5rem; font-size: 0.8rem; color: #7a6a5c; }
+    .consonant-count span {
+      background: #f5eadb; border: 1px solid #8b5a2b;
+      padding: 0.2rem 0.6rem; border-radius: 12px;
+      cursor: pointer; margin: 0 0.2rem;
+    }
+    .consonant-count span.active-count { background: #8b5a2b; color: white; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1 @click="currentPage='home'">📖 即兴之书</h1>
+    <div class="subtitle">一本属于即兴者的魔法书</div>
+  </div>
+
+  <div class="page-content">
+    <!-- 首页 -->
+    <div v-if="currentPage==='home'">
+      <div style="text-align:center; padding-top:2rem;">
+        <div style="font-size:1.8rem; font-style:italic; color:#8b5a2b; margin:2rem 0;">
+          "是的，而且……"<br><span style="font-size:0.9rem; color:#7a6a5c;">— 即兴第一定律</span>
+        </div>
+        <p>翻开这本魔法书，寻找你的即兴宝藏。</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem;">
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='book'">📘 即兴之书</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='generator'">🎰 灵感机</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='programs'">🎭 节目库</div>
+          <div class="card" style="text-align:center; cursor:pointer;" @click="currentPage='practice'">🎯 练习室</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 即兴之书 -->
+    <div v-if="currentPage==='book'" class="book-page-container">
+      <h2 style="margin-bottom:0.5rem;">📘 即兴之书</h2>
+      <div class="book-subtitle">当你迷茫时，翻开这一页</div>
+      <div class="book-cover" @click="flipBook">
+        <div class="book-cover-text" v-if="hasFlipped">{{ currentBookText }}</div>
+        <div class="book-cover-hint" v-else>轻触书页，获取指引</div>
+        <div class="book-cover-hint" v-if="hasFlipped">轻触书页，获取指引</div>
+      </div>
+      <div class="book-counter">已有 {{ quotes.length }} 句箴言</div>
+      <div class="book-submit" @click="submitQuote">📝 投稿 & 建议</div>
+    </div>
+
+    <!-- 灵感机 -->
+    <div v-if="currentPage==='generator'">
+      <div class="slot-container">
+        <div class="mode-toggle">
+          <span :class="{ 'active-mode': slotMode === 'semantic' }" @click="slotMode='semantic'">语义</span>
+          <span :class="{ 'active-mode': slotMode === 'phonetic' }" @click="slotMode='phonetic'">音韵</span>
+        </div>
+        <template v-if="slotMode==='semantic'">
+          <div class="difficulty-toggle">
+            <span @click="advancedMode = !advancedMode">[难度: {{ advancedMode ? '进阶' : '普通' }}]</span>
+          </div>
+          <div class="main-screen">
+            <div v-if="lastRolled === 'verse'" class="line-list"><div v-for="v in verseList" :key="v">{{ v }}</div></div>
+            <div v-else-if="lastRolled === 'quote'" class="line-list"><div v-for="q in quoteList" :key="q">{{ q }}</div></div>
+            <template v-else>
+              <div class="main-result">{{ mainDisplay }}</div>
+              <div v-if="subDisplay.length" class="sub-results">{{ subDisplay.join(' · ') }}</div>
+            </template>
+          </div>
+          <div class="button-grid">
+            <button class="slot-btn" @click="roll('object')" :class="{ 'active-btn': lastRolled === 'object' }">东西</button>
+            <button class="slot-btn" @click="roll('place')" :class="{ 'active-btn': lastRolled === 'place' }">地点</button>
+            <button class="slot-btn" @click="roll('relation')" :class="{ 'active-btn': lastRolled === 'relation' }">关系</button>
+            <button class="slot-btn" @click="roll('job')" :class="{ 'active-btn': lastRolled === 'job' }">职业</button>
+            <button class="slot-btn" @click="roll('emotion')" :class="{ 'active-btn': lastRolled === 'emotion' }">情绪</button>
+            <button class="slot-btn" @click="roll('genre')" :class="{ 'active-btn': lastRolled === 'genre' }">类型</button>
+            <button class="slot-btn" @click="roll('idiom')" :class="{ 'active-btn': lastRolled === 'idiom' }">成语</button>
+            <button class="slot-btn" @click="roll('verse')" :class="{ 'active-btn': lastRolled === 'verse' }">诗句</button>
+            <button class="slot-btn" @click="roll('quote')" :class="{ 'active-btn': lastRolled === 'quote' }">台词</button>
+          </div>
+        </template>
+        <template v-if="slotMode==='phonetic'">
+          <div class="main-screen">
+            <div class="main-result">{{ mainDisplay }}</div>
+            <div v-if="subDisplay.length" class="sub-results">{{ subDisplay.join(' · ') }}</div>
+          </div>
+          <div class="button-grid two-col">
+            <button class="slot-btn" @click="rollPhonetic('consonant')" :class="{ 'active-btn': lastRolled === 'consonant' }">随机声母</button>
+            <button class="slot-btn" @click="rollPhonetic('vowel')" :class="{ 'active-btn': lastRolled === 'vowel' }">随机韵母</button>
+          </div>
+          <div class="consonant-count" v-if="lastRolled === 'consonant'">
+            声母数量：
+            <span :class="{ 'active-count': consonantCount === 2 }" @click="consonantCount=2">2</span>
+            <span :class="{ 'active-count': consonantCount === 3 }" @click="consonantCount=3">3</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- 节目库 -->
+    <div v-if="currentPage==='programs'">
+      <h2>🎭 节目库</h2>
+      <div class="filter-row">
+        <span class="filter-label">大类：</span>
+        <button class="filter-btn" :class="{ active: !selectedClass }" @click="selectedClass = ''">全部</button>
+        <button class="filter-btn" v-for="cls in allClasses" :key="cls" :class="{ active: selectedClass === cls }" @click="selectedClass = (selectedClass === cls ? '' : cls)">{{ cls }}</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">标签：</span>
+        <button class="filter-btn" v-for="tag in allTags" :key="tag" :class="{ active: selectedTags.includes(tag) }" @click="toggleTag(tag)">{{ tag }}</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">人数：</span>
+        <button class="filter-btn" v-for="p in peopleRanges" :key="p.label" :class="{ active: selectedPeoples.includes(p.label) }" @click="togglePeople(p.label)">{{ p.label }}</button>
+      </div>
+      <div v-for="p in filteredPrograms" :key="p.id" class="program-card" @click="toggleProg(p.id)">
+        <h4>{{ p.name }} <span class="class-tag">{{ p.class }}</span></h4>
+        <div class="program-brief">{{ p.rules.slice(0, 50) }}…</div>
+        <div v-if="expandedProg === p.id" class="program-detail">
+          <p><span class="detail-label">别名：</span>{{ p.alias || '无' }}</p>
+          <p><span class="detail-label">人数：</span>{{ p.players }}</p>
+          <p><span class="detail-label">时长：</span>{{ p.duration }}</p>
+          <p><span class="detail-label">规则：</span>{{ p.rules }}</p>
+          <p><span class="detail-label">主持话术：</span>{{ p.hostLines }}</p>
+          <p><span class="detail-label">笑点设计：</span>{{ p.laughPoints }}</p>
+          <p><span class="detail-label">建议词类型：</span>{{ p.suggestType }}</p>
+          <p><span class="detail-label">标签：</span>{{ p.tags.join('、') }}</p>
+        </div>
+      </div>
+      <p v-if="filteredPrograms.length === 0" style="text-align:center; color:#7a6a5c;">没有找到符合条件的节目</p>
+    </div>
+
+    <!-- 练习室 -->
+    <div v-if="currentPage==='practice'">
+      <h2>🎯 练习室</h2>
+      <div class="filter-row">
+        <span class="filter-label">分类：</span>
+        <button class="filter-btn" :class="{ active: !gameFilter }" @click="gameFilter = ''">全部</button>
+        <button class="filter-btn" :class="{ active: gameFilter === '情绪' }" @click="gameFilter = '情绪'">情绪</button>
+        <button class="filter-btn" :class="{ active: gameFilter === '肢体' }" @click="gameFilter = '肢体'">肢体</button>
+        <button class="filter-btn" :class="{ active: gameFilter === '专注' }" @click="gameFilter = '专注'">专注</button>
+      </div>
+      <div v-for="g in filteredGames" :key="g.id" class="card">
+        <strong>{{ g.name }} <span class="class-tag">{{ g.category }}</span></strong>
+        <p style="margin-top:0.3rem;">{{ g.description }}</p>
+        <p style="font-size:0.8rem; color:#7a6a5c; margin-top:0.3rem;">👥 {{ g.players }} · ⏱️ {{ g.duration }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" :class="{active:currentPage==='book'}" @click="currentPage='book'">📖 即兴之书</div>
+    <div class="nav-item" :class="{active:currentPage==='generator'}" @click="currentPage='generator'">🎰 灵感机</div>
+    <div class="nav-item" :class="{active:currentPage==='programs'}" @click="currentPage='programs'">🎭 节目库</div>
+    <div class="nav-item" :class="{active:currentPage==='practice'}" @click="currentPage='practice'">🎯 练习室</div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, computed } = Vue;
+  createApp({
+    setup() {
+      const currentPage = ref('home');
+      // ========== 即兴之书数据 ==========
+      const quotes = [
+        { text: `"I don't know what I'm doing,but it's ok."——Sean Croft\n"我不知道我在干什么，但这是OK的。"——小丑哲学` },
+        { text: `"When no words have been spoken, one is in a state of modesty which allows words to be born out of silence."\n"当没有语言被说出时，你处在一种谦逊状态，这种状态让语言可以从沉默中诞生。"\n—— 贾克·乐寇` },
+        { text: `你从一个批评家变成一个建设者的过程，你一定会理解什么叫完成比完美更重要。\n——《李诞脱口秀工作手册》` },
+        { text: `即兴的底气，是相信同伴，更是敢做自己的勇敢。` },
+        { text: `住嘴。讲完话以后，留几秒沉默的时间。这个时间是搭档用来消化你的话的。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `舞台上，无实物是假的，剧情是假的，关系是假的，但记住只有你的搭档是真的，一定要重视你的搭档。\n——阿球` },
+        { text: `只有不断的练习，你才能渐渐在舞台上展示出真实的自己。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `优秀的即兴演员会习惯性地接纳每一条别人给他的提议。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `随机应变这项技能的基础是共情。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `做一个像水一样具有流动性的人。\n——《如何成为地球上最棒的即兴演员》` },
+        { text: `表演者的成长犹如树木一样，以优质的养分为基础，持续不断的生长。所以演员要有清晰的观察力和丰富的表演技术为基础，并且要努力成长为自由而富有创意的演员。\n——Yoo JinWoo（刘真雨）` },
+        { text: `人们生活中大部分不好的事情都是由于无意识而引起的。它们是小我创造的，有时我称它们为「戏剧性事件」。当你完全处于意识状态，戏剧性事件就不会再进入你的生活。\n——《当下的力量（白金版）》` },
+        { text: `当你完全接受当下的事实，你生活中的所有戏剧性事件就会终结。\n——《当下的力量（白金版）》` },
+        { text: `如果一个人有意识的改变自身的姿态，那么ta的自尊并不会因此受损。\n——《成长预演》` },
+        { text: `人为了谋生，展现和转换姿态就像呼吸一样自然而不可避免。\n——《成长预演》` },
+        { text: `人们经常试图通过扮演与自身所经历的姿态相反的角色，来隐藏自己的真实姿态。\n——《成长预演》` },
+        { text: `实际上，姿态交易始终在不断地发生。在公园里，我们会注意到鸭子的争吵，却不会注意到它们在没有争吵时，是如何小心翼翼地保持距离的。\n——Johnstone` },
+        { text: `人际互动在姿态上从来都不是中立的，我们都在不断地根据周围的环境和他人来调整自己的姿态。\n——《成长预演》` },
+        { text: `当「扮演怪物」与其他治疗工具结合使用时，它不仅有助于提升对他人差异性的容忍度，也有助于重新整合那些被排斥的自我部分。\n——schwartz` },
+        { text: `观众的关注就像一笔贷款，讲故事者需要通过遵守这些叙事规则来偿还。\n——《成长预演》` },
+        { text: `任何惯例，无论多么不同寻常，只有在被中断或打破时，才能产生叙事价值，因为打破惯例本身就能产生故事情节。完成的惯例可以成为故事的铺垫（"平台"）。\n——《成长预演》` },
+        { text: `通过共同（经历）虚构的危险，来创造真正互相支持的关系体验。\n——《成长预演》` },
+        { text: `正如良好的即兴创作原则与良好的关系功能之间存在对应关系一样，一个引人入胜并令人愉悦的故事，往往与那些以有意义并健康的方式，来定义我们现实的故事相呼应。\n——《成长预演》` },
+        { text: `在布鲁纳（Bruner）的范式思维中（参见第2章），一个理论的优越性在于它的优雅、预测力以及与其他已知事实的广泛兼容性；而在叙事模式中，当一个故事结构更连贯、信息普遍性更强、表演艺术性更高时，故事通常也更具洞见力。\n——《成长预演》` },
+        { text: `游戏的目标在于"胜负"和"擅长（不擅长）"，而非"寓教于乐"和"享受乐趣"时，乐趣便丧失了。\n——《成长预演》` },
+        { text: `在现实生活中，人们常常因为想显得强大而拒绝支持他人，但即兴训练则向我们展现了如何通过关注和支持他人，甚至令他人看起来不错，而获得乐趣并充满力量。\n——《成长预演》` },
+        { text: `在成长预演的玩乐世界中，通过一系列的游戏和练习，参与者体验到如何让对方感到强大和自信。\n——《成长预演》` },
+        { text: `频繁的权力转换建立了人与人之间的信任和融洽关系：我相信我现在可以公平地授权于你，因为我知道你很快会把权力还回来。\n——《成长预演》` },
+        { text: `只要没死，你并非如想象中的那般无能；你仅仅是被冻住了。\n——《即兴》` },
+        { text: `如果英雄被怪物吞下去了，他就会变成一坨英勇的排泄物，坚定地开始新的冒险。\n——《即兴》` },
+        { text: `事实上，坚持认为某一朵花是整个花园里最漂亮的一朵，这本身就很疯狂。\n——《即兴》` },
+        { text: `我开始认为，孩子不是未成熟的大人，而大人是退化了的孩子。\n——《即兴》` },
+        { text: `随着长大，一切都变得黯淡无趣。我仍记得小时候生活过的这个世界是多么新奇，但是我曾以为知觉的迟钝是长大的必然结果——就像眼睛的晶状体逐渐模糊一样。彼时的我并不明白，清晰其实一直留存心间。\n——《即兴》` },
+        { text: `我所做的就是专注于陌生人之间的关系，专注于使两个人想象力的结合能够相加而不是相减的方法。\n——《即兴》` },
+        { text: `我教的是自发性，因此我告诉他们，不必试图控制未来，或者想"赢"；清空大脑，只需看着。当轮到他们参加的时候，做该做的就行，然后瞧瞧会发生什么。正是这种不执着、不控制未来的决定，让学生产生了自发性。\n——《即兴》` },
+        { text: `每一个变化和动作都意味着一种姿态，任何行动都不是偶然的，也不是真的"没有动机"。\n——《即兴》` },
+        { text: `观众很享受姿态与社会地位的反差。\n——《即兴》` },
+        { text: `演员或即兴演员必须接受自己的缺点，允许自己受到侮辱，否则他永远不会真正感到"安全"。\n——《即兴》` },
+        { text: `如果你不知道在场景中该做什么，只需要说出类似的话："天哪！那是什么？"\n——《即兴》` },
+        { text: `之所以难受是因为我们在不停的解构和重建。\n——《即兴》` },
+        { text: `即兴演员必须明白，他的首要技能就是释放搭档的想象力。\n——《即兴》` },
+        { text: `我不想让他们去"思考"成为另一种生物，我想让他们"体验"成为另一种生物。\n——《即兴》` },
+        { text: `聆听和观察，这正是即兴最重要的两个规则之一。\n——《即兴戏剧》` },
+        { text: `唯一能让你失败的方法就是不去尝试。\n——《即兴戏剧》` },
+        { text: `人人都是天才，一切都是礼物。\n——《即兴戏剧》` },
+        { text: `停止分析性的思考，让你的身体动作激发你。\n——《即兴戏剧》` },
+        { text: `先到先得，后面优于前面。\n——《即兴戏剧》` },
+        { text: `大写Yes And。\n——《即兴戏剧》` },
+        { text: `实事求是。用发展的眼光看问题。\n——《李诞脱口秀工作手册》` },
+        { text: `越早丧失看剧的乐趣，越早发现观察剧的乐趣，越早成为一个合格的以创作为生的人。\n——《李诞脱口秀工作手册》` },
+        { text: `别离开战场，别离开战友，别离开敌人。\n——《李诞脱口秀工作手册》` },
+        { text: `以赛代练，错得够多了，自然就会了。\n——《李诞脱口秀工作手册》` },
+        { text: `创作不能靠雷劈，创作要自己没事就劈自己。\n——《李诞脱口秀工作手册》` },
+        { text: `不可能的，我们永远不可能准备好。如果你的目标是变成一个越来越强的演员，那就请永远都好好准备。\n——《李诞脱口秀工作手册》` },
+        { text: `对镜练习，回看录像，心里默戏，都是必要的工作。\n——《李诞脱口秀工作手册》` },
+        { text: `真诚是第一位的。\n——《李诞脱口秀工作手册》` },
+        { text: `有意义的失败远远比无意义的成功有价值。\n——《李诞脱口秀工作手册》` },
+        { text: `不停上开放麦，不停演出的目的，是练自己，不是炸场。\n——《李诞脱口秀工作手册》` },
+        { text: `人生的目的就是成为更好的自己。\n——《李诞脱口秀工作手册》` },
+        { text: `一定还要引领，让预测落空。不停找到同步，做出一点点引领，打破，重建，再同步，再引领。\n——《李诞脱口秀工作手册》` },
+        { text: `在自己的节奏里，就放松了，就自然了。你自己的节奏感，就是你的风格。\n——《李诞脱口秀工作手册》` },
+        { text: `取法其上得其中。\n——《李诞脱口秀工作手册》` },
+        { text: `不要给人拒绝的机会，给选择。《李诞脱口秀工作手册》` },
+        { text: `我总是说，没事的，做不好还做不坏吗，失败了就失败了。\n——《李诞脱口秀工作手册》` },
+        { text: `问事实，别问想法。问行为，别问理由。问事，别问人。\n——《李诞脱口秀工作手册》` },
+        { text: `完成比完美更重要。\n——《李诞脱口秀工作手册》` },
+        { text: `你是你的目的。\n——《李诞脱口秀工作手册》` },
+        { text: `喜剧=普通人+不具备获胜条件+无法克服的困难+从不放弃。\n——《喜剧这回事》` },
+        { text: `真听、真看、真感受。` },
+        { text: `因为一个故事想要吸引观众，最重要的就是得让观众喜欢上那个即将与我们一起踏上旅途的人。` },
+        { text: `喜剧演员是观众的玩具。` },
+        { text: `人人都可以是喜剧之王。` },
+        { text: `让队友发光。` },
+        { text: `尊重自发。` },
+        { text: `即兴是：从无序中寻找有序。` },
+        { text: `笑起来很响，想起来好笑。` },
+        { text: `聊天是最小的即兴。` },
+        { text: `相信即兴之神！` },
+        { text: `享受失控。` },
+        { text: `和队友一起冒险。` },
+        { text: `勇敢者先享受世界。` },
+        { text: `达成共识。` },
+        { text: `活在当下。` },
+        { text: `上台最重要的事情，就是启发你的伙伴。` },
+        { text: `善意的好奇。` },
+        { text: `去表达，去尝试，去兴高采烈的失败！` },
+        { text: `让困难飞一会儿。` },
+        { text: `看见伙伴，理解伙伴，支持伙伴。` },
+        { text: `首先是快乐，其他都是其他。` },
+        { text: `ALL FOR FUN.\n为了好玩。` },
+        { text: `活着就是一直即兴！` },
+        { text: `紧握的拳头接不住礼物，伸出的手掌才能抓住未来。` },
+        { text: `悲剧给人力量，喜剧给人希望。` },
+        { text: `不知道做什么，就看着队友，说一句简单的感受。` },
+        { text: `做个决定！` },
+        { text: `当你迷失时，看着伙伴的眼睛，就能找到方向；如果他也迷失了，至少你们看着彼此，陪伴着彼此一起迷失。` },
+        { text: `即兴喜剧是唯一一个可以按照你喜欢的方式自由生长的，怎么生长都是对。` },
+        { text: `勇敢一点，你比自己想象的更好。` },
+        { text: `成全让"我"成为"我们"。` },
+        { text: `我们可以大胆的介入他人的生活。` },
+        { text: `伙伴有多厉害，是我们决定的。` },
+        { text: `错误是礼物！` },
+        { text: `你会玩一辈子即兴么？人生就是一场即兴啊！慢慢来，我们是可以玩一辈子即兴的。` },
+        { text: `多聆听、多观察、多体验、多积累。` },
+        { text: `先在路上，再相遇，再陪伴。` },
+        { text: `感受当下。` },
+        { text: `不评判。` },
+        { text: `放弃预设。` },
+        { text: `信念感！` },
+        { text: `干拔！` },
+        { text: `没有计划也很好。` },
+        { text: `知行合一。` },
+        { text: `即兴就是允许有人不即兴。` },
+        { text: `团魂！` }
+      ];
+      const hasFlipped = ref(false);
+      const currentBookText = ref('');
+      function flipBook() { hasFlipped.value = true; currentBookText.value = quotes[Math.floor(Math.random() * quotes.length)].text; }
+      function submitQuote() { alert('欢迎投稿即兴箴言，或提出你的建议！\n\n📧 请访问：https://wj.qq.com/s2/你的问卷ID\n\n我们会定期整理并更新词库。'); }
+
+      // ========== 灵感机数据 ==========
+      const slotMode = ref('semantic');
+      const advancedMode = ref(false);
+      const mainDisplay = ref('🎰 点击按钮');
+      const subDisplay = ref([]);
+      const lastRolled = ref(null);
+      const verseList = ref([]);
+      const quoteList = ref([]);
+      const consonantCount = ref(2);
+
+      const baseObjects = ['马桶刷','情书','雨伞','袜子','猫','遥控器','拖鞋','牙刷','充电宝','眼镜','口罩','耳机','剪刀','胶带','打火机','钥匙扣','保温杯','自拍杆','便利贴','回形针','橡皮筋','蚊香','蜡烛','火柴','闹钟','日历','扑克牌','麻将','跳绳','气球','口香糖','棒棒糖','辣条','泡面','螺蛳粉','奶茶','咖啡豆','老干妈','秋裤','围巾','假发','墨镜','拐杖','轮椅','听诊器','算盘','指南针','望远镜','放大镜','手电筒','对讲机','喇叭','哨子','铃铛','风铃','存钱罐','红包','彩票','优惠券','传单','名片','身份证','护照','驾照','结婚证','离婚证','毕业照','日记本','密码本','涂改液','粉笔','黑板擦','红领巾','三道杠','奖状','试卷','答题卡','计算器','圆规','三角尺','地球仪','显微镜','试管','酒精灯','安全帽','警戒线','灭火器','防毒面具','降落伞','救生圈','藏宝图','漂流瓶','许愿瓶','时光胶囊','八音盒','陀螺','弹珠','毽子','沙包','皮筋','泡泡糖','贴纸','纹身贴','徽章','冰箱贴','手链','脚链','平安符','护身符','香囊','锦囊','扇子','手帕','丝巾','发卡','发绳','梳子','镜子','指甲刀','挖耳勺','棉签','创可贴','风油精','清凉油','暖宝宝','冰袋','热水袋','保温瓶','饭盒','筷子','勺子','叉子','吸管','围裙','袖套','手套','抹布','钢丝球','洗洁精','空气清新剂','樟脑丸','干燥剂','手机','数据线','插头','排插','电池','遥控车','积木','魔方','拼图','盲盒','扭蛋','手办','毛绒玩具','风筝','滑板','轮滑鞋','平衡车','无人机','三脚架','稳定器','麦克风','音响','投影仪','打印机','扫描仪','碎纸机','订书机','打孔器','切纸刀','塑封机','标签机','收款码','POS机','验钞机','点钞机','保险箱','密码锁','指纹锁','门禁卡','电梯卡','公交卡','银行卡','会员卡','积分卡','代金券','邀请函','请柬','贺卡','明信片','信封','信纸','便签纸','手账本','活页本','速写本','素描本','宣纸','毛笔','钢笔','圆珠笔','中性笔','马克笔','荧光笔','蜡笔','油画棒','彩铅','橡皮','卷笔刀','笔筒','文具盒','书包','双肩包','单肩包','斜挎包','腰包','手提袋','环保袋','编织袋','行李箱','登机箱','化妆包','洗漱包','急救包','工具包','针线包','分装瓶','喷雾瓶'];
+      const basePlaces = ['便利店','天台','诊所','电梯','公园','厕所','地铁站','公交站','候车室','机场大厅','火车站','码头','天桥','地下通道','停车场','加油站','收费站','服务区','菜市场','超市','商场','步行街','夜市','大排档','火锅店','奶茶店','咖啡厅','书店','图书馆','博物馆','美术馆','体育馆','游泳馆','电影院','KTV','网吧','密室逃脱','剧本杀店','桌游吧','健身房','舞蹈室','瑜伽馆','桑拿房','澡堂子','理发店','美甲店','纹身店','花店','宠物店','小卖部','杂货铺','五金店','文具店','打印店','照相馆','洗衣房','裁缝铺','修鞋摊','配钥匙摊','废品回收站','垃圾站','公共厕所','食堂','宿舍','教室','办公室','会议室','实验室','机房','传达室','保安亭','工地','厂房','仓库','码头','灯塔','瞭望塔','城堡','宫殿','地下室','阁楼','阳台','楼道','电梯间','楼梯间','消防通道','屋顶','烟囱','下水道','通风管道','废墟','烂尾楼','鬼屋','迷宫','密室','暗室','夹层','树洞','山洞','悬崖边','瀑布下','沙滩上','礁石上','桥洞下','城墙根','胡同口','弄堂里','四合院','筒子楼','大杂院','城中村','别墅区','度假村','农家乐','采摘园','鱼塘边','田地头','晒谷场','稻草堆','鸡窝','猪圈','牛棚','马厩','温室大棚','防空洞','避难所','医院','学校','操场','银行','邮局','警察局','消防站','法院','监狱','军营','殡仪馆','教堂','寺庙','清真寺','土地庙','城隍庙'];
+      const baseRelations = ['夫妻','师徒','同事','兄妹','邻居','父子','母女','姐妹','兄弟','姐弟','叔侄','姑侄','舅甥','姨甥','婆媳','翁婿','连襟','妯娌','前任','现任','暗恋对象','相亲对象','网友','笔友','室友','同桌','校友','老乡','战友','狱友','病友','旅友','驴友','牌友','酒友','球友','舞伴','搭档','合伙人','竞争对手','情敌','死对头','欢喜冤家','发小','闺蜜','知己','忘年交','点头之交','一面之缘','陌生人','快递员和收件人','外卖员和顾客','司机和乘客','导游和游客','教练和学员','老师和家长','医生和患者','律师和委托人','记者和采访对象','推销员和客户','房东和租客','老板和员工','上司和下属','面试官和求职者','考官和考生','警察和嫌疑人','狱警和囚犯','绑匪和人质','骗子与受害者','跟踪狂和目标','粉丝和偶像','代购和顾客','托尼老师和顾客','健身教练和会员','心理咨询师和来访者','算命先生和顾客','保安和访客','门卫和快递员','前台和来访者','客服和投诉者','主播和观众','UP主和粉丝','群主和群成员','贴吧吧主和吧友','博主和粉丝','导演和演员','编剧和演员','制片人和导演','灯光师和演员','场务和主演','替身和明星'];
+      const baseJobs = ['入殓师','拉面师','程序员','心理咨询师','外卖员','快递员','网约车司机','代驾','环卫工人','保安','门卫','前台','客服','销售','房产中介','保险经纪人','理财顾问','基金经理','股票交易员','会计','出纳','审计师','律师','法官','检察官','公证员','仲裁员','调解员','催眠师','塔罗师','占星师','风水先生','算命先生','道士','和尚','尼姑','牧师','神父','修女','萨满','巫医','赤脚医生','乡村医生','药剂师','护士','助产士','护工','月嫂','催乳师','营养师','健身教练','瑜伽教练','普拉提教练','舞蹈老师','钢琴老师','美术老师','书法老师','武术教练','游泳教练','滑雪教练','潜水教练','跳伞教练','赛车手','飞行员','空姐','高铁乘务员','列车长','船长','水手','渔民','潜水员','救生员','消防员','警察','交警','刑警','缉毒警','特警','武警','军人','民兵','保镖','私家侦探','狗仔队','娱记','战地记者','摄影师','记者','主持人','解说员','配音演员','声优','翻译','同声传译','手语翻译','导游','领队','地陪','讲解员','拍卖师','司仪','婚礼策划师','葬礼策划师','派对策划师','花艺师','茶艺师','调酒师','咖啡师','品酒师','侍酒师','厨师长','面包师','甜点师','巧克力师','寿司师傅','铁板烧师傅','拉面师傅','火锅底料调配师','奶茶研发师','调香师','评香师','电竞选手','游戏主播','游戏代练','游戏测试员','职业玩家','桌游设计师','剧本杀作者','密室逃脱设计师','导演','编剧','制片人','场务','灯光师','录音师','剪辑师','特效师','化妆师','服装师','道具师','美术指导','动作指导','武术指导','特技演员','替身演员','自媒体人','电商主播','带货主播','吃播博主','探店博主','测评博主'];
+      const adjectives = ['会说话','凌晨三点','失控','反重力','隐形','社恐','焦虑','狂喜','悲伤','愤怒','失眠','退休','流浪','实习','临时','兼职','全职','自由职业','无证','持证上岗','天才','废物','骨灰级','刚入门','穿越过来','来自未来','来自古代','外星','机器人','变种','变异','转基因','杂交','野生','家养','驯化','未驯服','冬眠','夏眠','正在孵化','即将孵化','刚刚孵化','融化','凝固','蒸发','升华','结晶','生锈','发霉','发光','发烫','冰凉','带电','带磁','放射性','有辐射','有毒','剧毒','微毒','无毒','致癌','养生','保健','滋补','上火','降火','祛湿','驱寒','暖宫','补肾','明目','清肝','润肺','养胃','补脑','安神','催眠','致幻','致盲','致聋','致哑','致瘫','致命','起死回生','长生不老','返老还童','童颜永驻','刀枪不入','百毒不侵','水火不侵','金刚不坏','一碰就碎','一触即发','一戳就破','一吹就倒','一拍就散','一拉就断','一撕就裂','见光死','遇水膨胀','遇火爆炸','遇冷收缩','遇热融化','会缩骨','会遁地','会隐身','会读心术','会瞬间移动','会穿越时空','会说人话','会唱歌','会跳舞','会演戏','会作诗','会写代码','会做PPT','会修水管','会通马桶','会开锁','会偷东西','能喷火','能喷水','能发电','能发光','能制冷','能加热','能净化空气','能吸收噪音','能翻译动物语言','能和植物对话','能和鬼魂交流','能预知未来','能看透人心','能改变天气','能控制时间','能暂停时间','能倒流时间','能加速时间','能抹除记忆','能植入想法','能操控梦境','不会累','不会饿','不会困','不会老','不会死','不怕冷','不怕热','不怕疼','不怕痒','不恐高','不晕车','不晕船','不晕机','没有存在感','存在感爆棚','被迫营业','自愿加班','正在摸鱼','刚被开除','刚升职','刚中彩票','刚失恋','刚恋爱','刚离婚','刚结婚','刚当爹','刚当妈','刚退休','刚入学','刚毕业','刚搬家','刚进城','刚下乡','刚回国','刚出国','刚学会走路','刚学会说话','刚学会上网'];
+      const emotions = ['愤怒','狂喜','悲伤','焦虑','平静','恐惧','惊讶','厌恶','羞耻','内疚','骄傲','嫉妒','羡慕','爱慕','依恋','怀念','遗憾','愧疚','委屈','压抑','烦躁','不安','紧张','慌张','慌乱','恐慌','崩溃','绝望','沮丧','失落','空虚','孤独','寂寞','无聊','麻木','冷漠','淡然','超脱','释然','豁达','洒脱','惬意','舒适','满足','幸福','甜蜜','温暖','感动','感激','感恩','崇拜','敬仰','敬畏','虔诚','痴迷','着魔','疯狂','癫狂','亢奋','激动','兴奋','雀跃','欢快','欣喜','惊喜','好奇','疑惑','困惑','迷茫','犹豫','迟疑','纠结','矛盾','挣扎','坚定','果敢','勇敢','自信','自卑','自负','自恋','自怜','自嘲','不羁','叛逆','倔强','固执','执拗','温柔','体贴','细腻','粗心','害羞','腼腆','扭捏','拘谨','社恐','气呼呼','乐呵呵','酸溜溜','美滋滋','乱糟糟','空落落','沉甸甸','兴高采烈','喜极而泣','哭笑不得','心急如焚','百感交集','心乱如麻','忐忑不安','心如死灰','得意忘形','恼羞成怒','惊慌失措','受宠若惊','热泪盈眶','感激涕零','羡慕嫉妒恨','敢怒不敢言','皮笑肉不笑','身不由己','无言以对','百无聊赖','心花怒放','心猿意马','心不在焉','心有余悸','心惊胆战','毛骨悚然','不寒而栗','七上八下','坐立不安','欣喜若狂','春风得意','如释重负','怅然若失','悲痛欲绝','欲哭无泪','怒气冲冲','大喜过望','心旷神怡','赏心悦目','心满意足','悠然自得','从容不迫','得意洋洋'];
+      const verses = ['床前明月光','疑是地上霜','举头望明月','低头思故乡','春眠不觉晓','处处闻啼鸟','夜来风雨声','花落知多少','白日依山尽','黄河入海流','欲穷千里目','更上一层楼','锄禾日当午','汗滴禾下土','谁知盘中餐','粒粒皆辛苦','春蚕到死丝方尽','蜡炬成灰泪始干','山重水复疑无路','柳暗花明又一村','两个黄鹂鸣翠柳','一行白鹭上青天','窗含西岭千秋雪','门泊东吴万里船','独在异乡为异客','每逢佳节倍思亲','遥知兄弟登高处','遍插茱萸少一人','清明时节雨纷纷','路上行人欲断魂','借问酒家何处有','牧童遥指杏花村','停车坐爱枫林晚','霜叶红于二月花','忽如一夜春风来','千树万树梨花开','大漠孤烟直','长河落日圆','海上生明月','天涯共此时','人生自古谁无死','留取丹心照汗青','不识庐山真面目','只缘身在此山中','少壮不努力','老大徒伤悲','野火烧不尽','春风吹又生','会当凌绝顶','一览众山小','采菊东篱下','悠然见南山','桃花潭水深千尺','不及汪伦送我情','孤帆远影碧空尽','唯见长江天际流','飞流直下三千尺','疑是银河落九天','两岸猿声啼不住','轻舟已过万重山','但使龙城飞将在','不教胡马度阴山','劝君更尽一杯酒','西出阳关无故人','洛阳亲友如相问','一片冰心在玉壶','月落乌啼霜满天','江枫渔火对愁眠','姑苏城外寒山寺','夜半钟声到客船','烟笼寒水月笼沙','夜泊秦淮近酒家','商女不知亡国恨','隔江犹唱后庭花','沉舟侧畔千帆过','病树前头万木春','曾经沧海难为水','除却巫山不是云','相见时难别亦难','东风无力百花残','在天愿作比翼鸟','在地愿为连理枝','同是天涯沦落人','相逢何必曾相识','此情可待成追忆','只是当时已惘然','人生若只如初见','何事秋风悲画扇','鹅鹅鹅曲项向天歌','白毛浮绿水','红掌拨清波','唧唧复唧唧','木兰当户织','不闻机杼声','惟闻女叹息','松下问童子','言师采药去','只在此山中','云深不知处','空山不见人','但闻人语响','返景入深林','复照青苔上','独坐幽篁里','弹琴复长啸','深林人不知','明月来相照','柴门闻犬吠','风雪夜归人','千山鸟飞绝','万径人踪灭','孤舟蓑笠翁','独钓寒江雪','小荷才露尖尖角','早有蜻蜓立上头','接天莲叶无穷碧','映日荷花别样红','爆竹声中一岁除','春风送暖入屠苏','等闲识得东风面','万紫千红总是春','葡萄美酒夜光杯','欲饮琵琶马上催','莫愁前路无知己','天下谁人不识君','故人西辞黄鹤楼','烟花三月下扬州','儿童相见不相识','笑问客从何处来','少小离家老大回','乡音无改鬓毛衰','二十四桥明月夜','玉人何处教吹箫','天阶夜色凉如水','卧看牵牛织女星','嫦娥应悔偷灵药','碧海青天夜夜心','何当共剪西窗烛','却话巴山夜雨时','身无彩凤双飞翼','心有灵犀一点通'];
+      const quotesData = ['这是最好的时代也是最坏的时代','今晚月色真美','让子弹飞一会儿','勇敢牛牛不怕困难','爱你孤身走暗巷','你相信光吗','我的草原我的马','听我说谢谢你','YYDS','这是什么神仙','我真的会谢','栓Q','命运的齿轮开始转动','出来混迟早要还','做人嘛开心最重要','做人如果没有梦想跟咸鱼有什么区别','能力越大责任越大','生活就像一盒巧克力','世界很大我想去看看','人生没有白走的路每一步都算数','你永远不知道明天和意外哪个先来','且行且珍惜','不忘初心方得始终','以梦为马不负韶华','愿你出走半生归来仍是少年','星光不问赶路人时光不负有心人','一切都是最好的安排','念念不忘必有回响','阳光总在风雨后','爱拼才会赢','三分天注定七分靠打拼','心有多大舞台就有多大','没有小角色只有小演员','台上一分钟台下十年功','戏如人生人生如戏','喜剧的内核是悲剧','让人笑比让人哭难','把生活过成段子','幽默是最高级的防御','自嘲是最大的自信','快乐是一种能力','你不是真正的快乐','笑着笑着就哭了','哭着哭着就笑了','成年人的崩溃往往只在一瞬间','没事就是最好的事','算了是一种解脱','放过自己','与自己和解','一切都是暂时的','会过去的','慢慢来比较快','不要急该来的都会来','你是我的神','这个可以有这个真没有','我想死你们了','打败你的不是天真是天真热','长点心吧','人生就像打电话不是你先挂就是我先挂','瞧我这个记性','宫廷玉液酒一百八一杯','探戈就是趟着走','下蛋公鸡公鸡中的战斗机','我这心呐拔凉拔凉的','忽悠接着忽悠','感谢天感谢地感谢命运让我们相遇','我命由我不由天','人心中的成见是一座大山','去你个山更险来水更恶','难也遇过苦也吃过走出个通天大道宽又阔','我不是针对谁我是说在座的各位','没有什么事情是一顿火锅解决不了的如果有那就两顿','我反对这门亲事','没人能逃过真香定律','吃着火锅唱着歌突然就被麻匪劫了','你给我翻译翻译什么叫惊喜','酒要一口一口喝路要一步一步走','没有你对我很重要','我就是想站着还把钱挣了','生活不止眼前的苟且还有诗和远方','后来我总算学会了如何去爱','十年之前我不认识你你不属于我','因为爱情不会轻易悲伤','朋友一生一起走那些日子不再有','曾经年少爱追梦一心只想往前飞','外面的世界很精彩外面的世界很无奈','我是一只小小小小鸟想要飞却飞不高','可惜不是你陪我到最后','后来终于在眼泪中明白','分手快乐祝你快乐你可以找到更好的','我爱你就像飞蛾扑向火','你是我的眼带我领略四季的变换','他说风雨中这点痛算什么','跟着我左手右手一个慢动作','青春是手牵手坐上了永不回头的火车','有一种爱叫做放手','死了都要爱不淋漓尽致不痛快','隐形的翅膀让梦恒久比天长','就算没有人为我鼓掌至少我还能够勇敢的自我欣赏','我曾经跨过山和大海也穿过人山人海','你在南方的艳阳里大雪纷飞我在北方的寒夜里四季如春','原谅我这一生不羁放纵爱自由','永远高唱我歌走遍千里','喜欢你那双眼动人笑声更迷人','甜蜜蜜你笑得甜蜜蜜好像花儿开在春风里','月亮代表我的心','生活总是让我们遍体鳞伤但到后来那些受伤的地方会变成我们最强壮的地方','每个人都会有缺陷就像被上帝咬过的苹果','幸福的家庭都是相似的每个不幸的家庭各有各的不幸','人可以被毁灭但不可以被打败','明天又是新的一天','你永远不会知道一段感情会把你带到什么地方','世界上最遥远的距离不是生与死而是我站在你面前你却不知道我爱你','如果你因失去了太阳而流泪那么你也将失去群星了','机会是不贴标签的快递它不会告诉你里面是惊喜还是空盒子','努力不一定成功但不努力一定很轻松','成功只有一个按照自己的方式去度过人生','良心是我心里一个三角形的东西我没有做坏事它就静静不动','人最宝贵的东西是生命生命对人来说只有一次','人的一生应当这样度过当他回首往事时不会因为碌碌无为而悔恨','世上本没有路走的人多了也便成了路','真正的勇士敢于直面惨淡的人生敢于正视淋漓的鲜血','不在沉默中爆发就在沉默中灭亡','面具戴太久就会长到脸上再想揭下来除非伤筋动骨扒皮','愿中国青年都摆脱冷气只是向上走','有一分热发一分光就令萤火一般','哪里有天才我是把别人喝咖啡的工夫都用在工作上了','时间就是性命无端的空耗别人的时间其实是无异于谋财害命的','教育植根于爱','只要是辛勤的蜜蜂在生活的广阔原野里到处都可以找到蜜源','不幸是一所最好的大学','世界上只有一种真正的英雄主义那就是在认清生活真相之后依然热爱生活','认识的人多了我就更喜欢狗','多年以后面对行刑队将会回想起父亲带他去见识冰块的那个遥远的下午','买下一张永久车票登上一列永无终点的火车','趁年轻好好利用这个机会尽力去尝遍所有痛苦','凡是过往皆为序章','黑夜无论怎样悠长白昼总会到来','爱所有人信任少数人不负任何人','我思故我在','他人即地狱','人类无法忍受太多的真实','当你凝视深渊时深渊也在凝视你','每一个不曾起舞的日子都是对生命的辜负','那些不能杀死你的终将使你更强大','上帝已死','自由不是你想做什么就做什么而是你不想做什么就不做什么','人的本质不是单个人所固有的抽象物在其现实性上它是一切社会关系的总和'];
+      const englishQuotes = ['Just do it','To be or not to be','You jump I jump','I am the king of the world','You Only Live Once','Impossible is nothing','Nothing is impossible','Never say never','Follow your heart','Be yourself','Less is more','Tomorrow is another day','Let it go','Life goes on','Stay hungry stay foolish','Carpe diem'];
+      const allQuotes = [...quotesData, ...englishQuotes];
+      const idioms = ['亡羊补牢','龟兔赛跑','王不留行','行云流水','一鸣惊人','守株待兔','掩耳盗铃','画蛇添足','叶公好龙','狐假虎威','画龙点睛','对牛弹琴','坐井观天','井底之蛙','塞翁失马','杞人忧天','刻舟求剑','削足适履','自相矛盾','买椟还珠','郑人买履','愚公移山','精卫填海','夸父逐日','女娲补天','后羿射日','嫦娥奔月','牛郎织女','梁山伯与祝英台','孟姜女哭长城','白蛇传','大闹天宫','三打白骨精','水漫金山','八仙过海','开天辟地','盘古开天','女娲造人','仓颉造字','神农尝百草','大禹治水','庖丁解牛','班门弄斧','高山流水','伯牙绝弦','知音难觅','曲高和寡','阳春白雪','下里巴人','滥竽充数','东施效颦','邯郸学步','鹦鹉学舌','人云亦云','随波逐流','亦步亦趋','步步为营','稳扎稳打','脚踏实地','步步惊心','步步高升','平步青云','一帆风顺','乘风破浪','披荆斩棘','筚路蓝缕','艰苦创业','白手起家','从零开始','破釜沉舟','背水一战','孤注一掷','置之死地而后生','绝处逢生','柳暗花明','峰回路转','天无绝人之路','车到山前必有路','船到桥头自然直','吉人自有天相','天时地利人和','万事俱备只欠东风','机不可失时不再来','趁热打铁','一鼓作气','势如破竹','排山倒海','雷霆万钧','泰山压顶','千钧一发','燃眉之急','迫在眉睫','刻不容缓','争分夺秒','只争朝夕','时不我待','光阴似箭','岁月如梭','白驹过隙','弹指一挥间','转瞬即逝','稍纵即逝','昙花一现','浮光掠影','过眼云烟','镜花水月','海市蜃楼','空中楼阁','子虚乌有','捕风捉影','无中生有','道听途说','三人成虎','以讹传讹','牵强附会','断章取义','管中窥豹','盲人摸象','以偏概全','一叶障目','鼠目寸光','一孔之见','蜻蜓点水','浅尝辄止','走马观花','囫囵吞枣','不求甚解','似是而非','模棱两可','含糊其辞','闪烁其辞','拐弯抹角','旁敲侧击','指桑骂槐','含沙射影','绵里藏针','口蜜腹剑','两面三刀','阳奉阴违','口是心非','言行不一','表里如一','始终如一','持之以恒','坚持不懈','锲而不舍','水滴石穿'];
+      const genres = ['喜剧','悬疑','恐怖','科幻','默片','音乐剧','动作片','武侠片','爱情片','伦理片','青春片','校园片','军旅片','警匪片','黑帮片','西部片','公路片','法庭片','医疗剧','职场剧','宫斗剧','宅斗剧','种田文','穿越剧','重生剧','逆袭爽文','大女主','大男主','双男主','双女主','甜宠剧','虐恋剧','先婚后爱','破镜重圆','欢喜冤家','追妻火葬场','追夫火葬场','狗血剧','家庭伦理剧','婆媳剧','育儿剧','养老剧','年代剧','民国剧','抗战剧','谍战剧','卧底片','无间道','古装剧','仙侠剧','玄幻剧','奇幻剧','魔幻片','神怪片','聊斋志异','西游改编','封神演义','武侠喜剧','宫廷权谋','后宫争斗','前朝权谋','清宫戏','大唐盛世','大秦帝国','三国演义','水浒传','西游记','红楼梦','纪录片','伪纪录片','吃播','vlog','探店视频','开箱视频','测评视频','解压视频','助眠视频','教程视频','科普视频','吐槽视频','鬼畜视频','搞笑配音','直播带货','综艺节目','选秀节目','真人秀','密室逃脱','剧本杀','跑团','狼人杀','谁是卧底','真心话大冒险','坦白局','怪兽片','灾难片','超级英雄片','美食番','旅行vlog'];
+      const consonants = ['b','p','m','f','d','t','n','l','g','k','h','j','q','x','zh','ch','sh','r','z','c','s'];
+      const vowels = ['a','o','e','i','u','ü','ai','ei','ui','ao','ou','iu','ie','üe','er','an','en','in','un','ün','ang','eng','ing','ong'];
+      function pickRandom(arr, count = 1) { const s = [...arr].sort(() => Math.random() - 0.5); return count === 1 ? s[0] : s.slice(0, count); }
+      function roll(dim) {
+        lastRolled.value = dim; verseList.value = []; quoteList.value = []; mainDisplay.value = ''; subDisplay.value = [];
+        switch(dim) {
+          case 'object': const obj = pickRandom(baseObjects); mainDisplay.value = advancedMode.value ? pickRandom(adjectives) + '的' + obj : obj; subDisplay.value = pickRandom(baseObjects.filter(o => o !== obj), 3); break;
+          case 'place': const plc = pickRandom(basePlaces); mainDisplay.value = advancedMode.value ? pickRandom(adjectives) + '的' + plc : plc; subDisplay.value = pickRandom(basePlaces.filter(p => p !== plc), 3); break;
+          case 'relation': const rel = pickRandom(baseRelations); mainDisplay.value = advancedMode.value ? pickRandom(adjectives) + '的' + rel : rel; subDisplay.value = pickRandom(baseRelations.filter(r => r !== rel), 3); break;
+          case 'job': const jb = pickRandom(baseJobs); mainDisplay.value = advancedMode.value ? pickRandom(adjectives) + '的' + jb : jb; subDisplay.value = pickRandom(baseJobs.filter(j => j !== jb), 3); break;
+          case 'emotion': mainDisplay.value = pickRandom(emotions); subDisplay.value = pickRandom(emotions.filter(e => e !== mainDisplay.value), 3); break;
+          case 'verse': verseList.value = pickRandom(verses, 4); break;
+          case 'quote': quoteList.value = pickRandom(allQuotes, 4); break;
+          case 'idiom': mainDisplay.value = pickRandom(idioms); subDisplay.value = pickRandom(idioms.filter(i => i !== mainDisplay.value), 3); break;
+          case 'genre': mainDisplay.value = pickRandom(genres); subDisplay.value = pickRandom(genres.filter(g => g !== mainDisplay.value), 3); break;
+        }
+      }
+      function rollPhonetic(type) {
+        lastRolled.value = type; mainDisplay.value = ''; subDisplay.value = [];
+        if (type === 'consonant') {
+          const c = pickRandom(consonants, consonantCount.value);
+          mainDisplay.value = c.join('·');
+          const others = [];
+          for (let i = 0; i < 3; i++) { others.push(pickRandom(consonants, consonantCount.value).join('·')); }
+          subDisplay.value = others;
+        } else if (type === 'vowel') {
+          const v = pickRandom(vowels);
+          mainDisplay.value = v;
+          subDisplay.value = pickRandom(vowels.filter(x => x !== v), 3);
+        }
+      }
+      function copyText(t) { navigator.clipboard.writeText(t).then(() => alert('已复制')); }
+
+      // ========== 节目库数据 ==========
+      const allPrograms = [
+        // 急智类 (18个)
+        { id:1, name:'拍手叫停', alias:'Freeze Tag', class:'急智类', tags:['肢体','快速切换'], players:'4-8人', minPlayers:4, maxPlayers:8, duration:'5-8分钟', rules:'两人开始一个场景。其他演员站在两侧。任何时候，场外演员喊“拍手叫停”并拍手，场上演员立刻冻结。喊停者拍其中一人肩膀，被拍者下场，新演员以完全相同的姿势接替，但开启一个全新的、无关的场景。', hostLines:'“接下来是拍手叫停。我需要两位演员先开始一个场景。其他演员，当你看到有趣的姿势时，拍手喊停，替换一个人，用同样的姿势开启全新的场景。开始！”', laughPoints:'姿势被强行嫁接到完全不同的场景中，产生的荒诞感和演员的快速合理化能力。', suggestType:'地点、关系' },
+        { id:2, name:'三头专家', alias:'Three-Headed Expert', class:'急智类', tags:['语言','快速切换'], players:'3人', minPlayers:3, maxPlayers:3, duration:'5-8分钟', rules:'三位演员并排站立，扮演一位“三头专家”。观众给出一个荒谬的专长领域。专家回答问题时，三人轮流说话，每人只能说一个字（或一个词），必须连贯成完整的句子。', hostLines:'“接下来是三头专家。我需要三位演员扮演一位专家，这位专家的专长是——（征集）——用脚剪头发！每人每次只能说一个字，但要连成完整的句子。开始！”', laughPoints:'三人接龙时的意外转折、语法混乱、互相救场的过程。', suggestType:'职业、东西' },
+        { id:3, name:'只问问题', alias:'Questions Only', class:'急智类', tags:['语言','快速切换'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'两位演员进行一段对话，但只能说问句。不能说陈述句、感叹句。如果某位演员说了非问句，观众或主持人可以喊“出局”，该演员下场，替补上场。', hostLines:'“接下来是只问问题。两位演员对话，只能说问句。地点是——（征集）——便利店。开始！”', laughPoints:'演员在限定规则下拼命用问句推进剧情，产生的扭曲感和语言技巧。', suggestType:'地点、关系' },
+        { id:4, name:'换换换', alias:'Switch', class:'急智类', tags:['角色','快速切换'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'3-5分钟', rules:'演员开始一个场景。主持人随时喊“换”，演员立刻互换角色（包括台词、动作、位置）。可以连续多次换。', hostLines:'“接下来是换换换。演员请开始一个场景。当我喊‘换’，你们立刻互换角色。开始！——换！——换！”', laughPoints:'演员瞬间切换时的混乱、记忆错乱、以及强行合理化对方刚才的动作和台词。', suggestType:'地点、关系' },
+        { id:5, name:'三个东西', alias:'Three Things', class:'急智类', tags:['语言','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'观众给出三个完全不相关的东西。演员需要在表演中，将这三个东西自然地融入场景和台词中，每个东西都要推动剧情。', hostLines:'“接下来是三个东西。请给我三个东西——（征集）——马桶刷、情书、会说话的猫。演员必须把这三个东西都用上，自然地融入。开始！”', laughPoints:'演员被迫在剧情中强行植入无关物品的荒诞感。', suggestType:'东西（需要三个）' },
+        { id:6, name:'操偶师', alias:'Puppet Master', class:'急智类', tags:['肢体','角色'], players:'3人', minPlayers:3, maxPlayers:3, duration:'3-5分钟', rules:'两位演员表演场景。第三位演员是“操偶师”，可以随时喊“停”，然后手动调整场上演员的姿势、表情、位置。场上演员必须保持被调整后的状态继续表演。', hostLines:'“接下来是操偶师。两位演员请开始一个场景。操偶师可以随时调整他们的姿势和表情。开始！”', laughPoints:'操偶师故意摆出的别扭姿势、演员在僵硬姿势下努力说台词的挣扎。', suggestType:'地点、关系' },
+        { id:7, name:'小帮手', alias:'Helper', class:'急智类', tags:['角色','快速切换'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'一位演员扮演需要帮助的人。其他演员轮流扮演“帮手”，但每个帮手都只能帮倒忙，或者用完全错误的方式帮忙。', hostLines:'“接下来是小帮手。我需要一位需要帮助的人——你在做什么？——（征集）——搬家。帮手们请轮流上前帮忙，但你们的帮忙只会让事情更糟。开始！”', laughPoints:'帮手的好心办坏事、越帮越忙的连锁反应。', suggestType:'职业、东西' },
+        { id:8, name:'世界最糟', alias:'World\'s Worst', class:'急智类', tags:['快速切换','角色'], players:'3-6人', minPlayers:3, maxPlayers:6, duration:'3-5分钟', rules:'主持人给出一个职业或身份。演员轮流上前，展示“世界上最糟的（这个职业）是什么样的”。', hostLines:'“接下来是世界最糟。我需要一个职业——（征集）——外卖员。演员请上前展示，世界上最糟的外卖员是什么样的。开始！”', laughPoints:'对职业刻板印象的极端荒诞演绎。', suggestType:'职业' },
+        { id:9, name:'字数限制', alias:'Word Limit', class:'急智类', tags:['语言','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员表演场景，但每句台词有字数限制。主持人可以随时改变字数限制，演员必须严格遵守。', hostLines:'“接下来是字数限制。演员正常开始一个场景。当我喊一个数字，每句话必须只有那么多字。开始！——三个字！——五个字！——一个字！”', laughPoints:'演员在字数限制下拼命凑字或删字，产生的奇怪断句和语言扭曲。', suggestType:'地点、关系' },
+        { id:10, name:'贪吃蛇', alias:'Snake', class:'急智类', tags:['语言','快速切换'], players:'3-6人', minPlayers:3, maxPlayers:6, duration:'3-5分钟', rules:'演员排成一列。第一人说一句话，第二人必须用第一人最后一个字作为自己台词的第一个字，以此类推。接不上来的人淘汰。', hostLines:'“接下来是贪吃蛇。演员请排好。第一个人说一句话，下一个人必须用最后一个字开头。开始！”', laughPoints:'演员为了接上奇怪的字而硬掰台词、在生僻字处卡壳的窘迫。', suggestType:'地点、关系' },
+        { id:11, name:'信息噩梦', alias:'Information Nightmare', class:'急智类', tags:['语言','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'两位演员对话。一位演员在每句台词中必须包含一个观众提供的随机词汇。另一位演员正常回应。', hostLines:'“接下来是信息噩梦。我需要几个随机词汇——（收集）。演员A，你在每句台词里必须用上我给你的一个词。演员B正常回应。开始！”', laughPoints:'演员被迫植入无关词汇的生硬感，以及搭档对荒诞台词的困惑。', suggestType:'东西、成语' },
+        { id:12, name:'瞎掰王', alias:'Bluff King', class:'急智类', tags:['语言','竞猜'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'主持人给出一个冷门词汇或概念。演员轮流上前，即兴编造这个词的定义、来源、用法。其中只有一个人说的是真的。观众投票猜谁在瞎掰。', hostLines:'“接下来是瞎掰王。这个词是——（展示一个冷门词）。演员请轮流解释这个词是什么意思。你们中只有一个人说的是真的。观众，请猜猜谁在瞎掰！”', laughPoints:'演员一本正经地胡说八道、真答案和假答案同样离谱的荒诞感。', suggestType:'成语、诗句' },
+        { id:13, name:'卡拉OK', alias:'Karaoke', class:'急智类', tags:['即兴歌曲','快速切换'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'演员表演一个场景。主持人随时播放一段随机伴奏（或哼唱旋律），当前正在说话的演员必须立刻把台词唱出来，配合旋律。', hostLines:'“接下来是卡拉OK。演员正常表演一个场景。当我放音乐，正在说话的人请把台词唱出来。开始！——音乐起！”', laughPoints:'演员被迫唱歌时的跑调、词不达意、旋律和剧情的冲突。', suggestType:'地点、关系' },
+        { id:14, name:'烂梗王', alias:'Pun Master', class:'急智类', tags:['语言','快速切换'], players:'2-6人', minPlayers:2, maxPlayers:6, duration:'3-5分钟', rules:'观众给出一个主题词。演员轮流上前，围绕这个词说出相关的谐音梗或双关语。接不上来或重复的人淘汰。', hostLines:'“接下来是烂梗王。请给我一个词——（征集）——‘鱼’。演员请轮流说出和‘鱼’有关的谐音梗。开始！”', laughPoints:'谐音梗本身的冷和烂、演员为了接梗硬凑的荒诞感。', suggestType:'东西、成语' },
+        { id:15, name:'小偷家族', alias:'Thief Family', class:'急智类', tags:['角色','快速切换'], players:'4-6人', minPlayers:4, maxPlayers:6, duration:'5-8分钟', rules:'一个家庭场景。每个演员被分配一个秘密身份（小偷、卧底、警察等），只有自己和观众知道。演员需要完成自己的秘密任务，同时不暴露身份。', hostLines:'“接下来是小偷家族。我需要一个家庭场景——（征集）——一家人吃年夜饭。我会给每个演员一个秘密身份。在表演中，你们要完成自己的秘密任务，但不能暴露。开始！”', laughPoints:'演员鬼鬼祟祟的行为、被揭发时的慌张、观众知道秘密的上帝视角乐趣。', suggestType:'地点、关系' },
+        { id:16, name:'火星重演', alias:'Mars Replay', class:'急智类', tags:['肢体','创意'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'先由两位演员即兴一个短场景。然后，另外两位演员扮演从火星来的外星人，他们看了这个场景后，用火星人的方式“重演”一遍，但完全理解错了地球人的行为逻辑。', hostLines:'“接下来是火星重演。首先请两位演员表演一个地球上的日常场景——（征集）——第一次约会。现在请两位火星人，根据你们刚才看到的地球人行为，重新演绎一遍！”', laughPoints:'火星人对人类行为的荒诞误解和夸张模仿。', suggestType:'地点、关系' },
+        { id:17, name:'字母剧场', alias:'Alphabet Game', class:'急智类', tags:['语言','快速切换'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'两位演员对话，每句话的首字必须按照字母表的顺序来。中文版可用拼音首字母。', hostLines:'“接下来是字母剧场。两位演员的对话，每句话的第一个字必须按字母顺序来。从A开始。地点——菜市场。开始！”', laughPoints:'演员为了凑字母而说出的牵强台词、在生僻字母处的卡壳和救场。', suggestType:'地点、关系' },
+        { id:18, name:'和我谈恋爱就像', alias:'Dating Me Is Like', class:'急智类', tags:['观众互动','角色'], players:'1-4人', minPlayers:1, maxPlayers:4, duration:'3-5分钟', rules:'观众给出一个物品或概念。演员轮流上前，用“和我谈恋爱就像（观众给的词），因为……”作为开头，即兴一段独白或短场景。', hostLines:'“接下来是‘和我谈恋爱就像’。请给我一个东西——（征集）——马桶刷。好，演员请上前，用‘和我谈恋爱就像马桶刷，因为……’开始你的表演！”', laughPoints:'演员用离谱的比喻硬凹浪漫或吐槽，产生强烈的反差幽默。', suggestType:'东西' },
+        // 互动类 (11个)
+        { id:19, name:'观众填空', alias:'Audience Fill-in', class:'互动类', tags:['观众互动','语言'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'演员表演一个场景。在关键台词处，演员停下来，指向观众，让观众填上一个词。演员必须接受这个词并继续表演。', hostLines:'“接下来是观众填空。演员会表演一个场景。当演员指向你的时候，请大声喊出一个词。演员必须用上你的词。开始！”', laughPoints:'观众给出的荒诞词汇强行改变剧情走向，演员努力合理化的过程。', suggestType:'东西、地点、职业' },
+        { id:20, name:'观众配音', alias:'Audience Dubbing', class:'互动类', tags:['观众互动','肢体'], players:'2人+观众', minPlayers:2, maxPlayers:20, duration:'3-5分钟', rules:'两位演员在舞台上表演默剧（不发出声音）。观众负责给他们的动作配音，说出他们“应该”在说什么。', hostLines:'“接下来是观众配音。两位演员请表演一段默剧。观众们，你们就是他们的声音，请帮他们把台词说出来。开始！”', laughPoints:'观众配音和演员动作的错位、多人同时配音的混乱。', suggestType:'地点、关系' },
+        { id:21, name:'我要退货', alias:'I Want a Refund', class:'互动类', tags:['观众互动','角色'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'观众给出一个东西。一位演员扮演顾客，来退货，理由是这东西有问题。另一位演员扮演店员，需要合理化为什么这东西没问题，拒绝退货。', hostLines:'“接下来是我要退货。请给我一个东西——（征集）——会说话的猫。顾客买了会说话的猫来退货，店员请想办法拒绝退货。开始！”', laughPoints:'顾客对离谱商品的离谱投诉、店员的强词夺理和神逻辑。', suggestType:'东西' },
+        { id:22, name:'非诚勿扰', alias:'Blind Date', class:'互动类', tags:['观众互动','角色'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'模仿相亲节目。一位演员扮演单身者，其他演员扮演应征者，每人有一个观众给的奇葩身份或特点。单身者通过提问来了解应征者，最后选一个。', hostLines:'“接下来是非诚勿扰。我需要一位单身者，和几位应征者。观众，请给每位应征者一个秘密身份或特点。单身者请通过提问来决定选择谁。开始！”', laughPoints:'应征者暗示自己奇葩身份时的拐弯抹角、单身者的困惑和误判。', suggestType:'职业、东西' },
+        { id:23, name:'道具百变', alias:'Prop Game', class:'互动类', tags:['无实物','创意','观众互动'], players:'1-4人', minPlayers:1, maxPlayers:4, duration:'3-5分钟', rules:'一个简单道具（或空手无实物）放在舞台中央。演员轮流上前，用这个道具表演一个不同于其本身功能的用途。不能重复已经出现过的用法。', hostLines:'“接下来是道具百变。这里有一把扫帚——但它不是扫帚。每位演员请上前，用这个道具展示一个全新的用途。不能重复。开始！”', laughPoints:'演员的创意脑洞和无实物表演的精准度。', suggestType:'东西' },
+        { id:24, name:'产品发布会', alias:'Product Launch', class:'互动类', tags:['观众互动','创意'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'观众给出两个完全不相关的物品。演员扮演产品经理，需要把这两个物品组合成一个“全新产品”，并召开一场产品发布会，介绍其功能、使用方法、定价等。', hostLines:'“接下来是产品发布会。请给我两个东西——（征集）——马桶刷和耳机。好，演员请就位，这是你们公司的新产品，请召开发布会。开始！”', laughPoints:'两个毫不相干的物品被强行组合后产生的荒诞功能、发布会上的专业话术与离谱产品的反差。', suggestType:'东西（需要两个）' },
+        { id:25, name:'电话转接中心', alias:'Call Center', class:'互动类', tags:['观众互动','角色'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'观众给出一个问题。演员扮演客服，需要把这个问题转接到各种离谱的“部门”，每个部门的“专家”给出更离谱的解决方案。', hostLines:'“接下来是电话转接中心。你有什么问题需要解决？——（征集）——我的猫会说话但只骂我。好，客服请接听这通电话，转接给合适的部门。开始！”', laughPoints:'转接过程中问题越来越离谱、各部门专家的荒诞方案。', suggestType:'东西、关系' },
+        { id:26, name:'广告时间', alias:'Commercial Break', class:'互动类', tags:['观众互动','创意'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'3-5分钟', rules:'观众给出一个产品。演员即兴表演一段关于这个产品的电视广告，包括广告语、使用前后对比、专家推荐等。', hostLines:'“接下来是广告时间。请给我一个产品——（征集）——空气。好，演员请为空气制作一条电视广告。开始！”', laughPoints:'对电视广告套路的夸张模仿、把无聊产品吹上天的荒诞感。', suggestType:'东西' },
+        { id:27, name:'我迟到了', alias:'I\'m Late', class:'互动类', tags:['观众互动','快速切换'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'一位演员扮演迟到的人，需要向另一位演员解释迟到的原因。观众给出三个离谱的障碍，迟到者必须把这些障碍串成一个连贯的理由。', hostLines:'“接下来是我迟到了。请给我三个迟到的理由——（征集）。好，迟到者请用这三个理由解释你为什么迟到。开始！”', laughPoints:'迟到者把离谱理由串成逻辑自洽的故事的脑洞能力。', suggestType:'东西、职业' },
+        { id:28, name:'坦白从宽', alias:'Confession', class:'互动类', tags:['观众互动','角色'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'观众给出一个“罪行”。一位演员扮演忏悔者，向另一位演员坦白。忏悔者需要逐步透露更多细节，而听者需要即兴追问。', hostLines:'“接下来是坦白从宽。请给我一个罪行——（征集）——偷了邻居的WiFi密码。忏悔者请开始你的坦白。开始！”', laughPoints:'罪行的逐渐离谱化、忏悔者的支支吾吾和听者的穷追不舍。', suggestType:'东西、职业' },
+        { id:29, name:'神奇聚会', alias:'Magic Party', class:'互动类', tags:['观众互动','角色'], players:'5-10人', minPlayers:5, maxPlayers:10, duration:'8-15分钟', rules:'观众给出一个聚会主题。每位演员扮演一个角色来参加这个聚会，每个角色有一个观众给的秘密身份或特征。演员们在聚会中互动，试图猜出彼此的秘密身份。', hostLines:'“接下来是神奇聚会。今天的聚会主题是——（征集）——超级英雄年会。每位演员请来参加，你们都有一个秘密身份。在互动中试着猜出彼此的身份。开始！”', laughPoints:'角色之间的误解和试探、秘密身份被揭穿时的戏剧效果。', suggestType:'职业、东西' },
+        // 猜谜类 (5个)
+        { id:30, name:'各怀鬼胎', alias:'Whisper Game', class:'猜谜类', tags:['观众互动','角色','竞猜'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员表演一个场景。每位演员有一个由观众私下告知的“内心秘密”。演员在表演中不能直接说出秘密，但需要让观众感受到这个秘密的存在。', hostLines:'“接下来是各怀鬼胎。我需要几位演员，然后我会请观众分别告诉他们一个内心的秘密。演员知道自己的秘密，但不知道别人的。在表演中，不能直接说破，但要表现出来。开始收集秘密！”', laughPoints:'观众知道所有秘密，看到演员在无形力量驱使下做出的怪异行为的“上帝视角”乐趣。', suggestType:'东西、关系' },
+        { id:31, name:'猜谜类', alias:'Guessing Game', class:'猜谜类', tags:['竞猜','观众互动'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'一位演员离开房间。观众决定一个职业、动作或场景。演员回来后，通过即兴提问和搭档的暗示来猜出观众决定的内容。搭档不能直接说出答案。', hostLines:'“接下来是猜谜游戏。请一位演员先离开。观众，请决定他要猜什么。好，演员请回来，通过提问和搭档的表演来猜出答案。开始！”', laughPoints:'猜谜者的困惑和离谱猜测、搭档暗示的过火或不足。', suggestType:'职业、东西' },
+        { id:32, name:'小偷家族', alias:'Thief Family', class:'猜谜类', tags:['竞猜','角色'], players:'4-6人', minPlayers:4, maxPlayers:6, duration:'5-8分钟', rules:'一个家庭场景。每个演员被分配一个秘密身份（小偷、卧底、警察等），只有自己和观众知道。演员需要完成自己的秘密任务，同时不暴露身份。', hostLines:'“接下来是小偷家族。我需要一个家庭场景——（征集）——一家人吃年夜饭。我会给每个演员一个秘密身份。在表演中，你们要完成自己的秘密任务，但不能暴露。开始！”', laughPoints:'演员鬼鬼祟祟的行为、被揭发时的慌张、观众知道秘密的上帝视角乐趣。', suggestType:'地点、关系' },
+        { id:33, name:'瞎掰王', alias:'Bluff King', class:'猜谜类', tags:['语言','竞猜'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'主持人给出一个冷门词汇或概念。演员轮流上前，即兴编造这个词的定义、来源、用法。其中只有一个人说的是真的。观众投票猜谁在瞎掰。', hostLines:'“接下来是瞎掰王。这个词是——（展示一个冷门词）。演员请轮流解释这个词是什么意思。你们中只有一个人说的是真的。观众，请猜猜谁在瞎掰！”', laughPoints:'演员一本正经地胡说八道、真答案和假答案同样离谱的荒诞感。', suggestType:'成语、诗句' },
+        { id:34, name:'Check Check Boom', alias:'声母韵母游戏', class:'猜谜类', tags:['语言','竞猜'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'一位演员是“猜词者”，离开房间。其他演员和观众决定一个词。猜词者回来后，其他演员只能用“Check”提示猜对了，“Boom”提示猜错了。', hostLines:'“接下来是Check Check Boom。请一位演员先离开。观众，请决定一个词。好，演员请回来，大家只能用‘Check’和‘Boom’来提示。开始！”', laughPoints:'猜词者在信息极少的情况下的疯狂猜测、提示者的无奈和抓狂。', suggestType:'东西、成语' },
+        // 导演类 (10个)
+        { id:35, name:'叮叮重来', alias:'Ding Ding', class:'导演类', tags:['快速切换','语言'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员表演一个场景。主持人手持铃铛（或喊“叮叮”），当演员说了一句台词或做了一个动作后，主持人立刻摇铃，演员必须立刻换一句台词或换一个动作。可以连续多次。', hostLines:'“接下来是叮叮重来。演员正常表演。当我摇铃，刚才那句台词不算，你需要换一句新的。开始！——叮叮！重来！——叮叮！再重来！”', laughPoints:'演员被反复否定后的崩溃、逐渐升级的离谱替代方案。', suggestType:'地点、关系' },
+        { id:36, name:'导演喊咔', alias:'Director\'s Cut', class:'导演类', tags:['导演控制','角色'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'一位演员扮演导演，其他演员表演一个场景。导演可以随时喊“咔”，然后给出离谱的指导，演员必须按指导重来。', hostLines:'“接下来是导演喊咔。我需要一位导演，其他演员表演一个场景。导演可以随时喊咔，给出新的指导。开始！——咔！更悲伤一点，想象你的狗刚死了！”', laughPoints:'导演的离谱指导、演员在指导下的夸张表演、指导前后的反差。', suggestType:'类型片、地点' },
+        { id:37, name:'前进后退', alias:'Forward Reverse', class:'导演类', tags:['导演控制','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员表演一个场景。主持人可以喊“前进”让场景继续，“后退”让场景倒回几秒，“快进”让场景跳到未来，“暂停”让演员冻结。', hostLines:'“接下来是前进后退。演员正常表演。当我喊‘后退’，你们要倒回刚才的动作和台词。喊‘快进’，你们要跳到未来的时间点。开始！——后退！——快进！——暂停！”', laughPoints:'演员在时间跳跃中的混乱、快进到荒诞未来的脑洞。', suggestType:'地点、关系' },
+        { id:38, name:'细节放大', alias:'Zoom In', class:'导演类', tags:['导演控制','故事叙述'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'演员表演一个场景。主持人可以随时喊“放大”，演员必须对刚才的一个动作或一句台词进行极致放大，用慢动作、重复、内心独白等方式展开。', hostLines:'“接下来是细节放大。演员正常表演。当我喊‘放大’，请对刚才的瞬间进行极致放大。开始！——放大！”', laughPoints:'一个微小的动作被放大到荒诞程度后的戏剧效果。', suggestType:'地点、关系' },
+        { id:39, name:'拐来拐去', alias:'Twist and Turn', class:'导演类', tags:['导演控制','故事叙述'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始一个故事。主持人可以随时喊“拐”，故事必须立刻转向一个完全不同的方向。', hostLines:'“接下来是拐来拐去。演员开始讲一个故事。当我喊‘拐’，故事必须立刻转向。开始！——拐！——再拐！”', laughPoints:'故事在意外转折中的荒诞升级、演员努力圆回来的挣扎。', suggestType:'类型片、地点' },
+        { id:40, name:'777', alias:'Seven Seven Seven', class:'导演类', tags:['导演控制','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员表演一个场景，但需要按照主持人给出的不同风格重演七次。每次风格都不同。', hostLines:'“接下来是777。演员表演一个短场景。然后，你们需要用七种不同的风格重演这个场景。第一遍，正常版。开始！——第二遍，恐怖片版！——第三遍，歌舞剧版！”', laughPoints:'同一场景在不同风格下的荒诞变形、演员的风格切换能力。', suggestType:'类型片、地点' },
+        { id:41, name:'斯维奇橙汁', alias:'Switch Juice', class:'导演类', tags:['导演控制','角色'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始一个场景。主持人准备了一些写有奇葩规则或角色的纸条。当主持人喊“斯维奇”，当前演员抽取一张纸条，必须立刻按纸条上的指示改变角色或表演方式。', hostLines:'“接下来是斯维奇橙汁。演员正常开始一个场景。当我说‘斯维奇’，请抽取一张纸条，并立刻按照纸条上的指示来演。开始！——斯维奇！”', laughPoints:'纸条上的奇葩规则突然改变角色、演员的快速适应和混乱。', suggestType:'类型片、情绪' },
+        { id:42, name:'拍句子', alias:'Sentence Building', class:'导演类', tags:['语言','快速切换'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'3-5分钟', rules:'演员排成一排。观众给出一个句子。演员轮流每人说一个字，组合成观众给的那个句子。不能提前商量。说错或接不上的人淘汰。', hostLines:'“接下来是拍句子。请给我一个句子——（征集）。演员轮流每人说一个字，组合成这个句子。开始！”', laughPoints:'演员对句子的记忆偏差、中途说错后的连锁反应。', suggestType:'台词/金句' },
+        { id:43, name:'藏头诗', alias:'Acrostic', class:'导演类', tags:['语言','即兴歌曲'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'3-5分钟', rules:'观众给出一个词或短句。演员需要以这个词的每个字为开头，即兴创作一首诗或一段台词，并融入一个表演场景中。', hostLines:'“接下来是藏头诗。请给我一个词——（征集）——‘春暖花开’。演员请用这四个字作为每句的开头，创作一首诗。开始！”', laughPoints:'演员在限定的字头下绞尽脑汁，产生的押韵、不押韵、硬掰的喜剧效果。', suggestType:'诗句、成语' },
+        { id:44, name:'备忘录', alias:'Memo', class:'导演类', tags:['语言','观众互动'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'演员表演一个场景。每位演员随身携带一个“备忘录”（空的笔记本）。在表演中，演员可以随时翻开备忘录，读出里面观众提前写好的内容，并融入场景。', hostLines:'“接下来是备忘录。请大家在纸条上写一些句子，放进演员的备忘录里。演员在表演中可以随时翻开备忘录，读出里面的内容。开始！”', laughPoints:'备忘录中荒诞句子突然插入时的意外感。', suggestType:'台词/金句' },
+        // 剧情类 (28个)
+        { id:45, name:'幸存者', alias:'Survivor', class:'剧情类', tags:['故事叙述','快速切换'], players:'5-10人', minPlayers:5, maxPlayers:10, duration:'8-15分钟', rules:'演员共同开始一个场景。每当主持人喊“淘汰”，当前正在说话的演员必须“死亡”并退出。其余演员继续，直到最后一人。最后一人需要给出一个完整的结局独白。', hostLines:'“接下来是幸存者。所有人都在一艘即将沉没的船上。当我说‘淘汰’，正在说话的人必须死去并退出。最后幸存的人请给这个场景一个结局。开始！”', laughPoints:'演员在死亡边缘的挣扎、突然“死亡”的戏剧效果、最后一人收尾的压力和创意。', suggestType:'地点' },
+        { id:46, name:'三岔口', alias:'Fork in the Road', class:'剧情类', tags:['故事叙述','观众互动'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始一个故事。每当剧情出现关键选择时，主持人让观众投票决定故事走向。演员必须按观众的选择继续。', hostLines:'“接下来是三岔口。演员开始一个故事。当故事出现关键选择时，我会请观众决定走向。开始！——现在，观众，她应该打开这扇门吗？举手投票！”', laughPoints:'观众故意选择最离谱的选项、演员被迫按照离谱方向演的挣扎。', suggestType:'地点、关系' },
+        { id:47, name:'平行宇宙', alias:'Parallel Universe', class:'剧情类', tags:['故事叙述','创意'], players:'4-6人', minPlayers:4, maxPlayers:6, duration:'5-8分钟', rules:'演员表演一个场景。主持人随时喊“切换”，场景切换到另一个平行宇宙，同样的角色但处境完全不同。演员必须立刻适应新的设定。', hostLines:'“接下来是平行宇宙。演员开始一个场景。当我说‘切换’，你们进入另一个平行宇宙，同样的角色但不同的处境。开始！——切换！”', laughPoints:'同一角色在不同宇宙中的反差、演员快速切换设定的能力。', suggestType:'地点、类型片' },
+        { id:48, name:'盗梦空间', alias:'Inception', class:'剧情类', tags:['故事叙述','创意'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始一个场景。每当主持人喊“进入”，场景就进入更深一层的梦境。每次进入，规则变得更离谱。当喊“醒来”，回到上一层。', hostLines:'“接下来是盗梦空间。演员开始一个现实场景。当我说‘进入’，你们进入第一层梦境。每层梦境的规则都不同。开始！——进入！——再进入！——醒来！”', laughPoints:'层层梦境中的荒诞规则叠加、演员在梦境跳跃中的混乱。', suggestType:'地点、类型片' },
+        { id:49, name:'你说什么', alias:'Say What', class:'剧情类', tags:['语言','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'两位演员对话。每当一位演员说了某句话，另一位演员可以喊“你说什么？”，说话者必须立刻换一句完全不同的话。可以连续触发。', hostLines:'“接下来是你说什么。两位演员正常对话。当对方说‘你说什么’，你必须换一句完全不同的台词。开始！——你说什么？——你说什么？”', laughPoints:'反复被否定后的崩溃、越来越离谱的替代台词。', suggestType:'地点、关系' },
+        { id:50, name:'角色互换', alias:'Role Swap', class:'剧情类', tags:['角色','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员表演一个场景，每人有一个明确的角色。主持人随时喊“互换”，演员立刻交换角色，但场景继续。', hostLines:'“接下来是角色互换。演员开始一个场景。当我说‘互换’，你们交换角色。开始！——互换！——再互换！”', laughPoints:'角色交换后的混乱、演员模仿对方刚才的表演。', suggestType:'地点、关系' },
+        { id:51, name:'人来人往', alias:'Comings and Goings', class:'剧情类', tags:['快速切换','角色'], players:'4-8人', minPlayers:4, maxPlayers:8, duration:'5-8分钟', rules:'舞台上有多个“门”。演员从不同的门进出，每次进出带来一个新的剧情线索或角色。场景随着人员流动不断演变。', hostLines:'“接下来是人来人往。舞台上有多个入口。演员可以随时从不同的门进出，每次进出都带来新的剧情。开始！”', laughPoints:'角色的突然出现和消失、多条剧情线的交错和碰撞。', suggestType:'地点' },
+        { id:52, name:'灵魂互换', alias:'Body Swap', class:'剧情类', tags:['角色','快速切换'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'两位演员开始一个场景，各有明确的角色。主持人喊“灵魂互换”后，两位演员交换角色（灵魂进入对方的身体），但场景和关系不变。', hostLines:'“接下来是灵魂互换。两位演员请确定你们的角色。当我说‘灵魂互换’，你们的灵魂交换，进入对方的身体。开始！——灵魂互换！”', laughPoints:'演员模仿对方角色时的夸张和扭曲、灵魂错位后的混乱。', suggestType:'关系、地点' },
+        { id:53, name:'时空穿越', alias:'Time Travel', class:'剧情类', tags:['故事叙述','创意'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员表演一个场景。主持人随时喊一个时间点（过去或未来），演员必须立刻切换到那个时间，表演同一批角色的状态。', hostLines:'“接下来是时空穿越。演员开始一个场景。当我说一个时间，你们立刻跳到那个时间继续表演。开始！——十年前！——十年后！——回到现在！”', laughPoints:'同一批角色在不同时间线的反差、过去行为对未来后果的荒诞展现。', suggestType:'地点、关系' },
+        { id:54, name:'连体婴儿', alias:'Siamese Twins', class:'剧情类', tags:['肢体','创意'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'两位演员扮演连体婴儿，身体某部分连在一起。观众决定他们连在哪里。演员需要合作完成一个日常任务，但受限于连体的身体。', hostLines:'“接下来是连体婴儿。请决定他们连在哪里——（征集）——后背连在一起。好，你们要去——（征集）——做一顿饭。开始！”', laughPoints:'连体带来的肢体协调困难、两人在受限状态下的合作和冲突。', suggestType:'地点、东西' },
+        { id:55, name:'空的空间', alias:'Empty Space', class:'剧情类', tags:['无实物','创意'], players:'3-6人', minPlayers:3, maxPlayers:6, duration:'5-8分钟', rules:'舞台完全空无一物。演员上场后，通过无实物表演和台词，逐步“搭建”出一个完整的场景。所有道具、家具、门窗都是演出来的。', hostLines:'“接下来是空的空间。这个舞台上什么都没有。请演员通过表演，让我们看到这个空间里有什么。场景是——（征集）——一个老旧的图书馆。开始！”', laughPoints:'演员们对同一空间的不同想象产生冲突、无实物表演的精准与失误。', suggestType:'地点' },
+        { id:56, name:'飞鸽传书', alias:'Pigeon Post', class:'剧情类', tags:['语言','观众互动'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'演员表演一个场景。在表演开始前或进行中，主持人收集观众写在纸条上的句子。当主持人喊“飞鸽传书”时，演员必须从纸条中随机抽取一张，读出上面的句子，并立刻将其合理化到场景中。', hostLines:'“接下来是飞鸽传书。在表演开始前，我需要大家写一些句子在纸条上。任何句子都可以！……好，演员请开始你们的场景。当我说‘飞鸽传书’，请抽取一张纸条并读出上面的句子。开始！”', laughPoints:'观众写出的荒诞句子突然插入剧情，演员需要立刻自圆其说。', suggestType:'台词/金句' },
+        { id:57, name:'佳片有约', alias:'Movie Night', class:'剧情类', tags:['故事叙述','类型片'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'8-12分钟', rules:'观众给出一个电影名字（可以是假的）。演员即兴表演这部电影的预告片，然后是电影中的三个关键场景，最后是一个“删减片段”。', hostLines:'“接下来是佳片有约。请给我一个电影名字——（征集）——《马桶刷大战外星人》。演员请先表演这部电影的预告片。开始！”', laughPoints:'预告片的夸张剪辑感、关键场景的荒诞、删减片段的离谱。', suggestType:'东西、类型片' },
+        { id:58, name:'拉洋片（关系小镇）', alias:'Relationship Town', class:'剧情类', tags:['故事叙述','关系'], players:'4-8人', minPlayers:4, maxPlayers:8, duration:'10-20分钟', rules:'观众给出几组关系。演员在一个虚构的小镇里，表演这些关系如何交织在一起。每个场景之间由旁白串联。重点展示人物关系的演变。', hostLines:'“接下来是拉洋片，也叫关系小镇。请给我几组关系——（征集）。演员请在这个小镇里，展示这些关系如何交织。开始！”', laughPoints:'不同关系线的意外交汇、人物在小镇中的命运交错。', suggestType:'关系（需要多组）' },
+        { id:59, name:'情绪过山车', alias:'Emotional Rollercoaster', class:'剧情类', tags:['情绪','快速切换'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始一个中性场景。主持人随机喊出1-10的情绪强度，或喊出具体情绪名称。演员必须立刻以该强度/情绪继续表演，同时保持场景逻辑。', hostLines:'“接下来是情绪过山车。我需要一个地点和一个关系——好，开始！……情绪强度，8！……愤怒！……悲伤！”', laughPoints:'演员在极端情绪中维持场景逻辑的荒诞反差，以及情绪瞬间切换的戏剧效果。', suggestType:'地点、关系、情绪' },
+        { id:60, name:'Sing It', alias:'唱出来', class:'剧情类', tags:['即兴歌曲','情绪'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'3-5分钟', rules:'演员开始一个场景。每当情绪达到高潮时，主持人喊“唱出来”，演员必须立刻把台词用唱的。歌曲风格由观众决定。', hostLines:'“接下来是Sing It。演员正常表演。当我喊‘唱出来’，请把台词唱出来。风格是——（征集）——摇滚！开始！——唱出来！”', laughPoints:'演员被迫唱歌时的突然转变、歌曲风格和剧情的冲突。', suggestType:'地点、关系' },
+        { id:61, name:'如果我变成一首歌', alias:'If I Become a Song', class:'剧情类', tags:['即兴歌曲','情绪'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'观众给出一个主题或情绪。演员先即兴一段场景，然后其中一位演员“变成一首歌”，用歌曲表达角色的内心。其他演员可以伴唱或和声。', hostLines:'“接下来是如果我变成一首歌。主题是——（征集）——后悔。演员先表演一段场景，然后主角变成一首歌，用歌曲表达内心。开始！”', laughPoints:'歌曲和场景的戏剧性反差、即兴歌词的创意和荒诞。', suggestType:'情绪、关系' },
+        { id:62, name:'对视不对视', alias:'Eye Contact', class:'剧情类', tags:['情绪','肢体'], players:'2人', minPlayers:2, maxPlayers:2, duration:'3-5分钟', rules:'两位演员表演一个场景。主持人随时喊“对视”或“不对视”。喊“对视”时，两人必须保持眼神接触；喊“不对视”时，两人都不能看对方。', hostLines:'“接下来是对视不对视。两位演员开始一个场景。当我说‘对视’，你们必须看着对方。当我说‘不对视’，你们不能看对方。开始！——对视！——不对视！”', laughPoints:'在不能看对方时强行交流的别扭感、对视时的尴尬和亲密。', suggestType:'地点、关系' },
+        { id:63, name:'My Movie', alias:'我的电影', class:'剧情类', tags:['故事叙述','类型片'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'一位演员是“导演”，另一位是“演员”。导演给演员一个场景和情绪要求。演员表演时，导演可以随时喊咔，给出新的情绪指导。', hostLines:'“接下来是My Movie。我需要一位导演和一位演员。导演请给你的演员一个场景和情绪。导演可以随时调整情绪。开始！——咔！更悲伤一点！”', laughPoints:'导演的离谱要求、演员在不同情绪间的快速切换。', suggestType:'情绪、类型片' },
+        { id:64, name:'面包机/道具机', alias:'Toaster', class:'剧情类', tags:['无实物','创意'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'3-5分钟', rules:'演员围成一个圈。主持人给出一个日常物品。第一位演员用无实物表演展示这个物品的一个用途。下一位演员必须展示一个不同的用途。不能重复。', hostLines:'“接下来是面包机。这个物品是——（征集）——雨伞。演员请轮流展示雨伞的不同用途。开始！”', laughPoints:'演员对同一物品的创意发散、无实物表演的精准度和趣味性。', suggestType:'东西' },
+        { id:65, name:'Remember Me', alias:'记住我', class:'剧情类', tags:['故事叙述','情绪'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'一位演员坐在椅子上，闭上眼睛，扮演一个失去记忆的人。其他演员通过描述和表演，帮他“回忆”起一段故事。回忆者和被回忆者共同构建这个记忆。', hostLines:'“接下来是Remember Me。我需要一位演员扮演失去记忆的人。其他人请帮他回忆起一段故事。开始！”', laughPoints:'回忆的不可靠性、不同人对同一记忆的不同版本。', suggestType:'地点、关系' },
+        { id:66, name:'奥斯卡的内心独白', alias:'Oscar\'s Inner Monologue', class:'剧情类', tags:['角色','情绪'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'演员表演一个场景。主持人可以随时喊“内心独白”，当前演员必须立刻面向观众，说出角色此刻的内心真实想法。想法往往和嘴上说的完全不同。', hostLines:'“接下来是奥斯卡的内心独白。演员正常表演一个场景。当我说‘内心独白’，请面向观众说出你此刻的真实想法。开始！——内心独白！”', laughPoints:'嘴上说一套心里想一套的巨大反差。', suggestType:'地点、关系' },
+        { id:67, name:'离婚调解室', alias:'Divorce Mediation', class:'剧情类', tags:['角色','情绪'], players:'3人', minPlayers:3, maxPlayers:3, duration:'5-8分钟', rules:'一位演员扮演调解员，两位演员扮演正在离婚的夫妻。观众给出离婚的原因（越离谱越好）。调解员需要试图挽回这段婚姻，但夫妻双方不断爆出更多奇葩问题。', hostLines:'“接下来是离婚调解室。这对夫妻要离婚，因为——（征集）——丈夫坚持认为自己是外星人。调解员请试图挽救这段婚姻。开始！”', laughPoints:'离婚理由的逐渐离谱化、调解员的无奈和抓狂。', suggestType:'东西、关系' },
+        { id:68, name:'爱情故事', alias:'Love Story', class:'剧情类', tags:['故事叙述','情绪'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'观众给出两个人名和他们的关系。演员即兴演绎这两个人从相识、相爱到分离（或相守）的完整爱情故事。', hostLines:'“接下来是爱情故事。请给我两个人名和他们的关系——（征集）。演员请演绎他们完整的爱情故事。开始！”', laughPoints:'爱情故事中的意外转折、对爱情套路的夸张模仿。', suggestType:'关系、地点' },
+        { id:69, name:'我的小宇宙', alias:'My Little Universe', class:'剧情类', tags:['故事叙述','创意'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'观众给出一个普通人。演员通过表演，展示这个人内心世界的“小宇宙”——他的幻想、恐惧、记忆等。其他演员扮演他内心世界的各种角色。', hostLines:'“接下来是我的小宇宙。请给我一个人——（征集）——一个正在排队的白领。演员请展示他的内心世界。开始！”', laughPoints:'内心世界和外部行为的反差、内心角色的荒诞互动。', suggestType:'职业、情绪' },
+        { id:70, name:'小宇宙', alias:'Micro Universe', class:'剧情类', tags:['故事叙述','创意'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'观众给出一个地点。演员扮演这个地点里不同时间发生的多个小故事。这些故事之间可能存在微妙的联系，也可能完全无关，但共同构成这个地点的“宇宙”。', hostLines:'“接下来是小宇宙。地点是——（征集）——24小时便利店。演员请展示这个便利店里不同时间发生的故事。开始！”', laughPoints:'不同故事之间的意外交集、同一地点里的人生百态。', suggestType:'地点' },
+        { id:71, name:'火星连环杀人案', alias:'Murder on Mars', class:'剧情类', tags:['故事叙述','竞猜'], players:'4-6人', minPlayers:4, maxPlayers:6, duration:'8-12分钟', rules:'火星上发生了连环杀人案。一位演员扮演侦探，其他演员扮演嫌疑人。观众给每位嫌疑人一个秘密。侦探通过审问来找出真凶。最后观众投票。', hostLines:'“接下来是火星连环杀人案。火星上发生了谋杀案。我需要一位侦探，几位嫌疑人。观众，请给每位嫌疑人一个秘密。侦探请开始审问。开始！”', laughPoints:'嫌疑人的离谱秘密、侦探的困惑、火星背景的荒诞设定。', suggestType:'职业、东西' },
+        { id:72, name:'打字机', alias:'Typewriter', class:'剧情类', tags:['故事叙述','语言'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'一位演员扮演“作家”，坐在打字机前，即兴口述一个故事。其他演员扮演故事中的人物，将作家口述的内容即时表演出来。作家可以随时修改、删除、重写。', hostLines:'“接下来是打字机。我需要一位作家，其他演员是故事中的人物。作家请开始口述你的故事，演员们会即时表演。作家可以随时修改。开始！”', laughPoints:'作家的随机修改导致演员被迫重新适应、口述和表演的错位。', suggestType:'地点、类型片' },
+        { id:73, name:'六句话', alias:'Six Lines', class:'剧情类', tags:['语言','观众互动'], players:'2-3人', minPlayers:2, maxPlayers:3, duration:'5-8分钟', rules:'观众在纸条上写下六句话。演员在表演中必须用上这六句话，但不能提前看。每次主持人递来一句话，演员必须立刻读出来并融入场景。', hostLines:'“接下来是六句话。请大家写六句话在纸条上。演员请开始表演。当我说‘来一句’，请抽取纸条并读出来。开始！”', laughPoints:'强行植入陌生句子的生硬感、演员努力圆回来的挣扎。', suggestType:'台词/金句' },
+        { id:74, name:'蒙太奇', alias:'Montage', class:'剧情类', tags:['故事叙述','快速切换'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员表演一系列快速切换的短场景，展示一个完整故事的蒙太奇片段。每个场景只有十几秒，但串联起来讲完一个故事。', hostLines:'“接下来是蒙太奇。演员请用一系列快速切换的短场景，展示一个完整的故事。每个场景都很短。开始！”', laughPoints:'场景快速切换的节奏感、碎片化叙事中产生的意外联系。', suggestType:'类型片、地点' },
+        { id:75, name:'中英鸟语', alias:'Chinglish', class:'剧情类', tags:['语言','快速切换'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'演员表演一个场景。主持人随时喊“切换语言”，演员必须在中英文之间切换。或者，不同角色说不同的语言，但彼此都能“理解”。', hostLines:'“接下来是中英鸟语。演员正常开始一个场景。当我说‘切换’，你们换一种语言。开始！——切换！——再切换！”', laughPoints:'语言切换时的语法混乱、不同语言的演员互相“理解”的荒诞感。', suggestType:'地点、关系' },
+        { id:76, name:'类型片', alias:'Genre Switch', class:'剧情类', tags:['类型片','快速切换'], players:'2-4人', minPlayers:2, maxPlayers:4, duration:'5-8分钟', rules:'演员开始表演一个中性场景。主持人随时喊出一个电影类型，演员必须立刻按照该类型的风格和套路继续表演。', hostLines:'“接下来是类型片。演员开始一个日常场景。当我说一个类型，你们立刻切换风格。开始！——恐怖片！——爱情片！——西部片！”', laughPoints:'同一场景在不同类型下的极端变形、演员的类型切换能力。', suggestType:'类型片、地点' },
+        { id:77, name:'坐站躺', alias:'Sit Stand Lie Down', class:'剧情类', tags:['肢体','情绪'], players:'3人', minPlayers:3, maxPlayers:3, duration:'3-5分钟', rules:'三位演员表演一个场景。任何时候，场景中必须有一人坐着、一人站着、一人躺着。当其中一人改变姿势，另外两人必须立刻调整姿势，确保三种姿势始终各有一人。', hostLines:'“接下来是坐站躺。三位演员请准备。场景中始终要有一人坐、一人站、一人躺。当有人换姿势，其他两人必须立刻调整。地点是——（征集）——医院。开始！”', laughPoints:'演员为了维持姿势而做出的夸张、牵强但又有趣的动作合理化。', suggestType:'地点、关系' },
+        { id:78, name:'二分之一故事', alias:'Half-Life Story', class:'剧情类', tags:['故事叙述','快速切换'], players:'3-5人', minPlayers:3, maxPlayers:5, duration:'5-8分钟', rules:'演员开始表演一个完整的故事。第一次演完整个故事。第二次，用一半时间重演。第三次，再减半。故事越来越快，越来越浓缩。', hostLines:'“接下来是二分之一故事，也叫半衰期。演员先完整表演一个故事。然后，你们要用一半的时间重演一遍。再一半。开始！——好，现在一半时间！——再一半！”', laughPoints:'故事在极限压缩下的变形、演员在高速表演中的崩溃。', suggestType:'地点、关系' },
+        // 长篇类 (7个)
+        { id:79, name:'哈罗德', alias:'Harold', class:'长篇类', tags:['故事叙述','长即兴'], players:'6-10人', minPlayers:6, maxPlayers:10, duration:'25-45分钟', rules:'即兴中最经典的长篇格式。开场是观众给出一个词，演员进行自由联想接龙。然后进入三个互不相关的场景。之后通过游戏、群戏、角色回归等手段，将之前的所有线索和角色串联在一起，形成一个完整的长篇即兴。', hostLines:'“接下来是哈罗德，最经典的长篇即兴。请给我一个词——（征集）。演员请开始自由联想。……好，现在我们进入第一个场景……”', laughPoints:'前期看似无关的线索在后半段巧妙回收、角色在不同场景中重新出现的惊喜。', suggestType:'东西、地点、关系' },
+        { id:80, name:'阿芒多', alias:'Armando', class:'长篇类', tags:['故事叙述','长即兴'], players:'5-8人', minPlayers:5, maxPlayers:8, duration:'20-30分钟', rules:'一位演员（阿芒多）站在舞台一侧，分享一个真实的个人故事或观察。其他演员根据这个故事中的元素，即兴表演一系列场景。场景可以是对故事的演绎、夸张、反转或灵感发散。', hostLines:'“接下来是阿芒多。我需要一位阿芒多，请分享一个真实的个人故事。其他演员会根据这个故事即兴表演场景。开始！”', laughPoints:'真实故事和荒诞演绎的反差、同一故事的不同解读角度。', suggestType:'无需建议词' },
+        { id:81, name:'蒙太奇', alias:'Montage', class:'长篇类', tags:['故事叙述','长即兴'], players:'5-10人', minPlayers:5, maxPlayers:10, duration:'15-25分钟', rules:'观众给出一个主题。演员围绕这个主题，表演一系列风格各异的短场景，场景之间通过快速的舞台调度连接。每个场景独立但围绕同一主题。', hostLines:'“接下来是蒙太奇长篇版。今天的主题是——（征集）——等待。演员请围绕这个主题，开始你们的蒙太奇。开始！”', laughPoints:'同一主题在不同场景中的多样化呈现、场景之间的快速转换。', suggestType:'地点、情绪' },
+        { id:82, name:'盗梦空间', alias:'Inception', class:'长篇类', tags:['故事叙述','创意','长即兴'], players:'5-8人', minPlayers:5, maxPlayers:8, duration:'15-25分钟', rules:'长篇版的盗梦空间。演员构建多层梦境，每层梦境有不同的规则和角色。最终需要在不同层级之间穿梭，找到核心真相。', hostLines:'“接下来是盗梦空间长篇版。演员请构建现实场景。当我说‘进入’，进入第一层梦境。每层梦境的规则都不同。开始！——进入！”', laughPoints:'层层梦境中的荒诞规则叠加、演员在梦境跳跃中的混乱和创意。', suggestType:'地点、类型片' },
+        { id:83, name:'幸存者', alias:'Survivor', class:'长篇类', tags:['故事叙述','长即兴'], players:'6-12人', minPlayers:6, maxPlayers:12, duration:'15-25分钟', rules:'长篇版幸存者。所有演员在一个大型场景中。主持人定期淘汰演员。被淘汰者可以以新角色回归。最终需要完成一个叙事闭环。', hostLines:'“接下来是幸存者长篇版。所有人都在——（征集）——一艘即将沉没的太空船上。当我说‘淘汰’，正在说话的人必须死去。被淘汰的人可以以新角色回归。开始！”', laughPoints:'演员的陆续“死亡”和复活、角色群的演变、最终结局的收束。', suggestType:'地点' },
+        { id:84, name:'即兴到死', alias:'Improv to Death', class:'长篇类', tags:['故事叙述','长即兴'], players:'4-8人', minPlayers:4, maxPlayers:8, duration:'20-40分钟', rules:'一个超长篇即兴格式。演员从头到尾不间断地表演，直到一个完整的叙事结束。中间可以有场景切换、时间跳跃，但不能停止。', hostLines:'“接下来是即兴到死。演员将从现在开始，不间断地表演一个完整的故事。开始！”', laughPoints:'长时间表演的耐力考验、故事在不受打断的情况下自然演变的魅力。', suggestType:'地点、关系' },
+        { id:85, name:'拉洋片（关系小镇）', alias:'Relationship Town', class:'长篇类', tags:['故事叙述','关系','长即兴'], players:'4-8人', minPlayers:4, maxPlayers:8, duration:'10-20分钟', rules:'观众给出几组关系。演员在一个虚构的小镇里，表演这些关系如何交织在一起。长篇版可以扩展到更多场景和更复杂的人物网。', hostLines:'“接下来是拉洋片长篇版，也叫关系小镇。请给我几组关系——（征集）。演员请在这个小镇里，展示这些关系如何交织。开始！”', laughPoints:'不同关系线的意外交汇、人物在小镇中的命运交错。', suggestType:'关系（需要多组）' }
+      ];
+
+      const selectedClass = ref('');
+      const selectedTags = ref([]);
+      const selectedPeoples = ref([]);
+      const expandedProg = ref(null);
+      const allClasses = ['急智类', '互动类', '猜谜类', '导演类', '剧情类', '长篇类'];
+      const allTags = computed(() => {
+        const tags = new Set();
+        allPrograms.forEach(p => p.tags.forEach(t => tags.add(t)));
+        return Array.from(tags).sort();
+      });
+      const peopleRanges = [
+        { label: '1-3人', min: 1, max: 3 },
+        { label: '4-6人', min: 4, max: 6 },
+        { label: '7人以上', min: 7, max: 999 }
+      ];
+      function toggleTag(tag) {
+        const idx = selectedTags.value.indexOf(tag);
+        if (idx >= 0) selectedTags.value.splice(idx, 1);
+        else selectedTags.value.push(tag);
+      }
+      function togglePeople(label) {
+        const idx = selectedPeoples.value.indexOf(label);
+        if (idx >= 0) selectedPeoples.value.splice(idx, 1);
+        else selectedPeoples.value.push(label);
+      }
+      const filteredPrograms = computed(() => {
+        return allPrograms.filter(p => {
+          if (selectedClass.value && p.class !== selectedClass.value) return false;
+          if (selectedTags.value.length > 0 && !p.tags.some(t => selectedTags.value.includes(t))) return false;
+          if (selectedPeoples.value.length > 0) {
+            const match = selectedPeoples.value.some(label => {
+              const range = peopleRanges.find(r => r.label === label);
+              return range && (p.minPlayers <= range.max && p.maxPlayers >= range.min);
+            });
+            if (!match) return false;
+          }
+          return true;
+        });
+      });
+      function toggleProg(id) {
+        expandedProg.value = expandedProg.value === id ? null : id;
+      }
+
+      // 练习室数据
+      const games = [
+        { id: 1, name: 'Zip Zap Zop', category: '专注', players: '6-20人', duration: '3分钟', description: '传递能量球，说错或迟疑的人淘汰或做即兴惩罚。' },
+        { id: 2, name: '情感雕塑', category: '情绪', players: '4-10人', duration: '5分钟', description: '一人摆出雕塑姿势，其他人根据姿势赋予一种强烈情绪并说出内心独白。' }
+      ];
+      const gameFilter = ref('');
+      const filteredGames = computed(() => {
+        if (!gameFilter.value) return games;
+        return games.filter(g => g.category === gameFilter.value);
+      });
+
+      return {
+        currentPage,
+        quotes, hasFlipped, currentBookText, flipBook, submitQuote,
+        slotMode, advancedMode, mainDisplay, subDisplay, lastRolled, verseList, quoteList, consonantCount,
+        roll, rollPhonetic, copyText,
+        selectedClass, selectedTags, selectedPeoples, expandedProg,
+        allClasses, allTags, peopleRanges, toggleTag, togglePeople,
+        filteredPrograms, toggleProg,
+        gameFilter, filteredGames
+      };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
